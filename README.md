@@ -24,14 +24,16 @@ Primitives start with a lowercase letter.
 - mixed
 
 ```js
+var t = require('assert');
+
 var x: type = y;
 // transformed to
-var x = assert.type(y, assert[type]);
+var x = t.check(y, t[type]);
 
 // example
 var x: number = 1;
 // transformed to
-var x = assert.type(1, assert.number);
+var x = t.check(1, t.number);
 ```
 
 ## Arrays
@@ -39,12 +41,12 @@ var x = assert.type(1, assert.number);
 ```js
 var x: Array<T> = y;
 // transformed to
-var x = assert.type(y, assert.list(T));
+var x = t.check(y, t.list(T));
 
 // example
 var x: Array<string> = [];
 // transformed to
-var x = assert.type([], assert.list(assert.string));
+var x = t.check([], t.list(t.string));
 ```
 
 ## Tuples
@@ -52,12 +54,12 @@ var x = assert.type([], assert.list(assert.string));
 ```js
 var x: [T1, T2, ...] = y;
 // transformed to
-var x = assert.type(y, assert.tuple([T1, T2, ...]));
+var x = t.check(y, t.tuple([T1, T2, ...]));
 
 // example
 var x: [string, number] = ['a', 1];
 // transformed to
-var x = assert.type(['a', 1], assert.tuple([assert.string, assert.number]));
+var x = t.check(['a', 1], t.tuple([t.string, t.number]));
 ```
 
 ## Classes
@@ -67,13 +69,13 @@ Classes start with a uppercase letter.
 ```js
 var x: T = y;
 // transformed to
-var x = assert.type(y, T);
+var x = t.check(y, T);
 
 // example
 function Person() {}
 var x: Person = new Person();
 // transformed to
-var x = assert.type(new Person(), Person);
+var x = t.check(new Person(), Person);
 ```
 
 ## Objects
@@ -81,14 +83,14 @@ var x = assert.type(new Person(), Person);
 ```js
 var x: {p1: T1; p2: T2; ... pn: Tn;} = y;
 // transformed to
-var x = assert.type(y, assert.object({p1: T1, p2: T2, ... pn: Tn}));
+var x = t.check(y, t.object({p1: T1, p2: T2, ... pn: Tn}));
 
 // example
 var x: {a: string; b: number;} = {a: 'a', b: 1};
 // transformed to
-var x = assert.type({a: 'a', b: 1}, assert.object({
-  a: assert.string,
-  b: assert.number
+var x = t.check({a: 'a', b: 1}, t.object({
+  a: t.string,
+  b: t.number
 }));
 ```
 
@@ -97,12 +99,12 @@ var x = assert.type({a: 'a', b: 1}, assert.object({
 ```js
 var x: {[key:D]: C} = y;
 // transformed to
-var x = assert.type(y, assert.dict(D, C));
+var x = t.check(y, t.dict(D, C));
 
 // example
 var x: {[key:string]: number} = {a: 1, b: 2};
 // transformed to
-var x = assert.type({a: 1, b: 2}, assert.dict(assert.string, assert.number));
+var x = t.check({a: 1, b: 2}, t.dict(t.string, t.number));
 ```
 
 ## Functions
@@ -114,11 +116,11 @@ function f(x1: T1, x2: T2, ... xn: Tn): R {
 }
 // transformed to
 function f(x1, x2, ... xn) {
-  x1 = assert.type(x1, T1);
-  x2 = assert.type(x2, T2);
+  x1 = t.check(x1, T1);
+  x2 = t.check(x2, T2);
   ...
-  xn = assert.type(xn, Tn);
-  return assert.type((function f(x1, x2, ... xn){
+  xn = t.check(xn, Tn);
+  return t.check((function f(x1, x2, ... xn){
     ...
     return x;
   })(x1, x2, ... xn), R);
@@ -130,10 +132,10 @@ function foo(x: string): string {
 }
 // transformed to
 function foo(x) {
-  x = assert.type(x, assert.string);
-  return assert.type((function foo(x) {
+  x = t.check(x, t.string);
+  return t.check((function foo(x) {
     return x;
-  })(x), assert.string);
+  })(x), t.string);
 }
 ```
 
@@ -142,12 +144,12 @@ function foo(x) {
 ```js
 var x: ?type = y;
 // transformed to
-var x = assert.type(y, assert.maybe(type));
+var x = t.check(y, t.maybe(type));
 
 // example
 var x: ?string = null;
 // transformed to
-var x = assert.type(null, assert.maybe(assert.string));
+var x = t.check(null, t.maybe(t.string));
 ```
 
 ## Unions
@@ -155,12 +157,12 @@ var x = assert.type(null, assert.maybe(assert.string));
 ```js
 var x: T1 | T2 | ... | Tn = y;
 // transformed to
-var x = assert.type(y, assert.union([T1, T2, ... , Tn]));
+var x = t.check(y, t.union([T1, T2, ... , Tn]));
 
 // example
 var x: string | number = 1;
 // transformed to
-var x = assert.type(1, assert.union([assert.string, assert.number]));
+var x = t.check(1, t.union([t.string, t.number]));
 ```
 
 ## Intersections
@@ -168,12 +170,12 @@ var x = assert.type(1, assert.union([assert.string, assert.number]));
 ```js
 var x: T1 & T2 & ... & Tn = y;
 // transformed to
-var x = assert.type(y, assert.intersection([T1, T2, ... , Tn]));
+var x = t.check(y, t.intersection([T1, T2, ... , Tn]));
 
 // example
 var x: A & B = 1;
 // transformed to
-var x = assert.type(1, assert.intersection([A, B]));
+var x = t.check(1, t.intersection([A, B]));
 ```
 
 # Type aliases
@@ -181,7 +183,7 @@ var x = assert.type(1, assert.intersection([A, B]));
 ```js
 type T = Array<string>;
 // transformed to
-var T = assert.list(assert.string);
+var T = t.list(t.string);
 ```
 
 # API
@@ -198,33 +200,32 @@ Strips the types from `source` optionally inserting type assertions.
 
 # Assert library API
 
-## `assert.type(value: T, type: Type): T`
+## `t.check(value: T, type: Type): T`
 
 - by default `instanceof` is used to check the type
 - if `type` owns a static `is(x: any)`, it will be used  to check the type
-- if `value` is not of type `type`, `assert.fail` will be called with a meaningful error message
+- if `value` is not of type `type`, `t.fail` will be called with a meaningful error message
 
-## `assert.list(type: Type, name: ?string): Type`
+## `t.list(type: Type, name: ?string): Type`
 
 Returns a type representing the list `Array<type>`.
 
-## `assert.tuple(types: Array<Type>, name: ?string): Type`
+## `t.tuple(types: Array<Type>, name: ?string): Type`
 
 Returns a type representing the tuple `[...types]`.
 
-## `assert.object(props: {[key:string]: Type}): Type`
+## `t.object(props: {[key:string]: Type}): Type`
 
 Returns a type representing the object `{p1: T1, p2: T2, ... p3: T3}`.
 
-## `assert.dict(domain: Type, codomain: Type, name: ?string): Type`
+## `t.dict(domain: Type, codomain: Type, name: ?string): Type`
 
 Returns a type representing the nullable type `?type`.
 
-## `assert.maybe(type: Type, name: ?string): Type`
+## `t.maybe(type: Type, name: ?string): Type`
 
 Returns a type representing the nullable type `?type`.
 
-## `assert.union(types: Array<Type>, name: ?string): Type`
+## `t.union(types: Array<Type>, name: ?string): Type`
 
 Returns a type representing the union `T1 | T2 | ... | Tn`.
-

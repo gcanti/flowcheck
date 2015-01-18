@@ -5,7 +5,7 @@
   } else if (typeof exports === 'object') {
     module.exports = factory();
   } else {
-    root.dike = factory();
+    root.t = factory();
   }
 }(this, function () {
 
@@ -206,7 +206,7 @@
     var errors = validate(x, T);
     if (errors) {
       var message = [].concat(errors).join('\n');
-      //debugger;
+      debugger;
       throw new TypeError(message);
     }
     return x;
@@ -225,7 +225,7 @@
     dict: dict,
     object: object,
     union: union,
-    validate: validate
+    check: check
   };
 
   return exports;
