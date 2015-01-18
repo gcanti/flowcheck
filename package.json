@@ -1,0 +1,25 @@
+{
+  "name": "dike",
+  "version": "0.1.0",
+  "description": "Runtime type checking for Flow",
+  "main": "index.js",
+  "scripts": {
+    "test": "browserify test/assert.test | testling -u",
+    "test-node": "node test/assert.test | tap-spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gcanti/dike.git"
+  },
+  "author": "Giulio Canti <giulio.canti@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gcanti/dike/issues"
+  },
+  "homepage": "https://github.com/gcanti/dike",
+  "devDependencies": {
+    "tap-spec": "^2.1.1",
+    "tape": "^3.0.3",
+    "testling": "^1.7.1"
+  }
+}

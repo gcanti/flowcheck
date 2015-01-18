@@ -3,12 +3,11 @@
 A set / type is an object with a static function
 
 ```
-validate(x: any, ctx: ?Array<any>, fast: ?boolean): Validation
+validate(x: any, ctx: ?Array<any>, fast: ?boolean): ?Array<Failure>
 ```
 
 ```js
 type Failure = {actual: any; expected: Type, path: Array<string>}
-type Validation = {value: any, errors: Array<ValidationError>, ok: boolean}
 ```
 
 # Transformations
@@ -229,6 +228,3 @@ Returns a type representing the nullable type `?type`.
 
 Returns a type representing the union `T1 | T2 | ... | Tn`.
 
-## `assert.intersection(types: Array<Type>, name: ?string): Type`
-
-Returns a type representing the intersection `T1 & T2 & ... & Tn`.
