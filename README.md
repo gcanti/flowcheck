@@ -1,20 +1,38 @@
-# The Idea
+This library has 2 main modules:
 
-A set / type is an object with a static function
+- a **source transformer**
+- a **runtime assertion library**
 
-```
+The transformer adds to your code an assert for each (Flow) type.
+
+The runtime assertion module checks the types at runtime. If an assert fails **the debugger kicks in** so you can inspect the stack and quickly find out what's wrong.
+
+In the runtime assertion module, a type is represented by an object with 2 properties:
+
+- name: string
+- validate: function
+
+The validate function has the following signature:
+
+```js
 validate(x: any, ctx: ?Array<any>, fast: ?boolean): ?Array<Failure>
 ```
 
+where
+
 ```js
-type Failure = {actual: any; expected: Type, path: Array<string>}
+Failure = {
+  actual: any;
+  expected: Type;
+  path: Array<string | number>;
+}
 ```
+
+So you can also use flowcheck as a **general purpose validation** library.
 
 # Transformations
 
 ## Basic types
-
-Primitives start with a lowercase letter.
 
 - number
 - string
@@ -24,42 +42,29 @@ Primitives start with a lowercase letter.
 - mixed
 
 ```js
-var t = require('assert');
+var f = require('flowcheck/assert');
 
 var x: type = y;
-// transformed to
-var x = t.check(y, t[type]);
-
-// example
-var x: number = 1;
-// transformed to
-var x = t.check(1, t.number);
+// =>
+var x = f.check(y, f.<type>);
 ```
 
 ## Arrays
 
 ```js
 var x: Array<T> = y;
-// transformed to
-var x = t.check(y, t.list(T));
-
-// example
-var x: Array<string> = [];
-// transformed to
-var x = t.check([], t.list(t.string));
+// or
+var x: T[] = y;
+// =>
+var x = f.check(y, f.list(T));
 ```
 
 ## Tuples
 
 ```js
 var x: [T1, T2, ...] = y;
-// transformed to
-var x = t.check(y, t.tuple([T1, T2, ...]));
-
-// example
-var x: [string, number] = ['a', 1];
-// transformed to
-var x = t.check(['a', 1], t.tuple([t.string, t.number]));
+// =>
+var x = f.check(y, f.tuple([T1, T2, ...]));
 ```
 
 ## Classes
@@ -68,164 +73,109 @@ Classes start with a uppercase letter.
 
 ```js
 var x: T = y;
-// transformed to
-var x = t.check(y, T);
-
-// example
-function Person() {}
-var x: Person = new Person();
-// transformed to
-var x = t.check(new Person(), Person);
+// =>
+var x = f.check(y, T);
 ```
 
 ## Objects
 
 ```js
 var x: {p1: T1; p2: T2; ... pn: Tn;} = y;
-// transformed to
-var x = t.check(y, t.object({p1: T1, p2: T2, ... pn: Tn}));
-
-// example
-var x: {a: string; b: number;} = {a: 'a', b: 1};
-// transformed to
-var x = t.check({a: 'a', b: 1}, t.object({
-  a: t.string,
-  b: t.number
-}));
+// =>
+var x = f.check(y, f.object({p1: T1, p2: T2, ... pn: Tn}));
 ```
 
 ## Dictionaries
 
 ```js
 var x: {[key:D]: C} = y;
-// transformed to
-var x = t.check(y, t.dict(D, C));
-
-// example
-var x: {[key:string]: number} = {a: 1, b: 2};
-// transformed to
-var x = t.check({a: 1, b: 2}, t.dict(t.string, t.number));
-```
-
-## Functions
-
-```js
-function f(x1: T1, x2: T2, ... xn: Tn): R {
-  ...
-  return x;
-}
-// transformed to
-function f(x1, x2, ... xn) {
-  x1 = t.check(x1, T1);
-  x2 = t.check(x2, T2);
-  ...
-  xn = t.check(xn, Tn);
-  return t.check((function f(x1, x2, ... xn){
-    ...
-    return x;
-  })(x1, x2, ... xn), R);
-}
-
-// example
-function foo(x: string): string {
-  return x;
-}
-// transformed to
-function foo(x) {
-  x = t.check(x, t.string);
-  return t.check((function foo(x) {
-    return x;
-  })(x), t.string);
-}
+// =>
+var x = f.check(y, f.dict(D, C));
 ```
 
 ## Maybe Types
 
 ```js
-var x: ?type = y;
-// transformed to
-var x = t.check(y, t.maybe(type));
-
-// example
-var x: ?string = null;
-// transformed to
-var x = t.check(null, t.maybe(t.string));
+var x: ?T = y;
+// =>
+var x = f.check(y, f.maybe(T));
 ```
 
 ## Unions
 
 ```js
 var x: T1 | T2 | ... | Tn = y;
-// transformed to
-var x = t.check(y, t.union([T1, T2, ... , Tn]));
-
-// example
-var x: string | number = 1;
-// transformed to
-var x = t.check(1, t.union([t.string, t.number]));
+// =>
+var x = f.check(y, f.union([T1, T2, ... , Tn]));
 ```
 
-## Intersections
+## Functions
 
 ```js
-var x: T1 & T2 & ... & Tn = y;
-// transformed to
-var x = t.check(y, t.intersection([T1, T2, ... , Tn]));
-
-// example
-var x: A & B = 1;
-// transformed to
-var x = t.check(1, t.intersection([A, B]));
+function f(x1: T1, x2: T2, ... , xn: Tn): R {
+  return x;
+}
+// =>
+function f(x1: T1, x2: T2, ... , xn: Tn): R {
+  f.check(arguments, f.args([T1, T2, ... , Tn]));
+  var ret = (function (x1, x2, ... , xn) {
+    return x;
+  }).apply(this, arguments);
+  return f.check(ret, R);
+}
 ```
 
 # Type aliases
 
 ```js
 type T = Array<string>;
-// transformed to
-var T = t.list(t.string);
+// =>
+var T = f.list(f.string);
 ```
 
 # API
 
-## `transform(source: string, options: ?object): string`
+`transform(source: string, options: ?object): string`
 
-Strips the types from `source` optionally inserting type assertions.
+Inserts the type assertions.
 
-### `options`
+Options
 
-- "typeAssertions": boolean
-- "typeAssertionModule": string
-- "typeAssertionVariable": string
+- "typeAssertionModule": string (default `flowcheck`)
+- "typeAssertionVariable": string (default `f`)
 
 # Assert library API
 
-## `t.check(value: T, type: Type): T`
+`f.irreducible(name: string, is: (x: any) => boolean): Type`
+
+Defines a new irreducible type,
+
+`f.check(value: T, type: Type): T`
 
 - by default `instanceof` is used to check the type
 - if `type` owns a static `is(x: any)`, it will be used  to check the type
-- if `value` is not of type `type`, `t.fail` will be called with a meaningful error message
+- if `value` is not of type `type`, `f.fail` will be called with a meaningful error message
 
-## `t.list(type: Type, name: ?string): Type`
+`f.list(type: Type, name: ?string): Type`
 
 Returns a type representing the list `Array<type>`.
 
-## `t.tuple(types: Array<Type>, name: ?string): Type`
+`f.tuple(types: Array<Type>, name: ?string): Type`
 
 Returns a type representing the tuple `[...types]`.
 
-## `t.object(props: {[key:string]: Type}): Type`
+`f.object(props: {[key:string]: Type}): Type`
 
 Returns a type representing the object `{p1: T1, p2: T2, ... p3: T3}`.
 
-## `t.dict(domain: Type, codomain: Type, name: ?string): Type`
+`f.dict(domain: Type, codomain: Type, name: ?string): Type`
 
 Returns a type representing the nullable type `?type`.
 
-## `t.maybe(type: Type, name: ?string): Type`
+`f.maybe(type: Type, name: ?string): Type`
 
 Returns a type representing the nullable type `?type`.
 
-## `t.union(types: Array<Type>, name: ?string): Type`
+`f.union(types: Array<Type>, name: ?string): Type`
 
 Returns a type representing the union `T1 | T2 | ... | Tn`.

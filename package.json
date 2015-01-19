@@ -1,22 +1,22 @@
 {
-  "name": "dike",
+  "name": "flowcheck",
   "version": "0.1.0",
   "description": "Runtime type checking for Flow",
   "main": "index.js",
   "scripts": {
-    "test": "browserify test/assert | testling -u",
-    "test-node": "node test/assert | tap-spec"
+    "test": "browserify test | testling -u",
+    "test-node": "node test | tap-spec"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/gcanti/dike.git"
+    "url": "https://github.com/gcanti/flowcheck.git"
   },
   "author": "Giulio Canti <giulio.canti@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gcanti/dike/issues"
+    "url": "https://github.com/gcanti/flowcheck/issues"
   },
-  "homepage": "https://github.com/gcanti/dike",
+  "homepage": "https://github.com/gcanti/flowcheck",
   "devDependencies": {
     "tap-spec": "^2.1.1",
     "tape": "^3.0.3",
