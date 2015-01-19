@@ -5,19 +5,11 @@
   } else if (typeof exports === 'object') {
     module.exports = factory();
   } else {
-    root.t = factory();
+    root.f = factory();
   }
 }(this, function () {
 
   'use strict';
-
-  /*
-
-    A set / type is an object with a static function:
-
-        validate(x: any, ctx: ?Array<any>, fast: ?boolean): Validation
-
-  */
 
   function Failure(actual, expected, ctx) {
     this.actual = actual;
@@ -26,9 +18,10 @@
   }
 
   Failure.prototype.toString = function () {
+    var ctx = this.ctx ? this.ctx.join(' / ') : '';
+    ctx = ctx ? ', context: ' + ctx : ', (no context)';
     return 'Expected an instance of ' + this.expected.name +
-    (this.ctx ? ' in ' + this.ctx.join('.') : '') +
-    ', got `' + JSON.stringify(this.actual) + '`';
+    ' got ' + JSON.stringify(this.actual) + ctx;
   };
 
   function Type(name, validate, is) {
@@ -80,13 +73,13 @@
     return x != null && typeof x === 'object' && !Arr.is(x);
   });
 
-  function validate(x, T, ctx, fast) {
-    if (T.validate) { return T.validate(x, ctx, fast); }
-    return x instanceof T ? null : [new Failure(x, T, ctx)];
+  function validate(x, type, ctx, fast) {
+    if (type.validate) { return type.validate(x, ctx, fast); }
+    return x instanceof type ? null : [new Failure(x, type, ctx)];
   }
 
-  function list(T, name) {
-    name = name || 'Array<' + T.name + '>';
+  function list(type, name) {
+    name = name || 'Array<' + type.name + '>';
     return new Type(name, function (x, ctx, fast) {
       ctx = ctx || [];
       ctx.push(name);
@@ -94,27 +87,27 @@
       if (!Arr.is(x)) { return [new Failure(x, Arr, ctx)]; }
       var errors = null, suberrors;
       for (var i = 0, len = x.length ; i < len ; i++ ) {
-        suberrors = validate(x[i], T, ctx.concat(i));
+        suberrors = validate(x[i], type, ctx.concat(i));
         if (suberrors) {
+          if (fast) { return suberrors; }
           errors = errors || [];
           errors.push.apply(errors, suberrors);
-          if (fast) { break; }
         }
       }
       return errors;
     });
   }
 
-  function maybe(T, name) {
-    name = name || '?' + T.name;
+  function maybe(type, name) {
+    name = name || '?' + type.name;
     return new Type(name, function (x, ctx, fast) {
-      if (x === null) { return null; }
-      return validate(x, T, ctx, fast);
+      if (x == null) { return null; }
+      return validate(x, type, ctx, fast);
     });
   }
 
-  function getName(T) {
-    return T.name;
+  function getName(type) {
+    return type.name;
   }
 
   function tuple(types, name) {
@@ -130,9 +123,9 @@
       for (var i = 0 ; i < dimension ; i++ ) {
         suberrors = validate(x[i], types[i], ctx.concat(name, i));
         if (suberrors) {
+          if (fast) { return suberrors; }
           errors = errors || [];
           errors.push.apply(errors, suberrors);
-          if (fast) { break; }
         }
       }
       return errors;
@@ -152,16 +145,16 @@
           // check domain
           suberrors = validate(k, domain, ctx.concat(name, k));
           if (suberrors) {
+            if (fast) { return suberrors; }
             errors = errors || [];
             errors.push.apply(errors, suberrors);
-            if (fast) { break; }
           }
           // check codomain
           suberrors = validate(x[k], codomain, ctx.concat(name, k));
           if (suberrors) {
+            if (fast) { return suberrors; }
             errors = errors || [];
             errors.push.apply(errors, suberrors);
-            if (fast) { break; }
           }
         }
       }
@@ -180,9 +173,9 @@
         if (props.hasOwnProperty(k)) {
           suberrors = validate(x[k], props[k], ctx.concat(name, k));
           if (suberrors) {
+            if (fast) { return suberrors; }
             errors = errors || [];
             errors.push.apply(errors, suberrors);
-            if (fast) { break; }
           }
         }
       }
@@ -202,8 +195,38 @@
     return type;
   }
 
-  function check(x, T) {
-    var errors = validate(x, T);
+  function slice(arr, start, end) {
+    return Array.prototype.slice.call(arr, start, end);
+  }
+
+  function args(types, varargs) {
+    var name = '(' + types.map(getName).join(', ') + ', ...' + (varargs || Any).name + ')';
+    var len = types.length;
+    var typesTuple = tuple(types);
+    if (varargs) { varargs = list(varargs); }
+    return new Type(name, function (x, ctx, fast) {
+      ctx = ctx || [];
+      var errors = null, suberrors;
+      suberrors = typesTuple.validate(slice(x, 0, len), ctx.concat('arguments'), fast);
+      if (suberrors) {
+        if (fast) { return suberrors; }
+        errors = errors || [];
+        errors.push.apply(errors, suberrors);
+      }
+      if (varargs) {
+        suberrors = varargs.validate(slice(x, len), ctx.concat('varargs'), fast);
+        if (suberrors) {
+          if (fast) { return suberrors; }
+          errors = errors || [];
+          errors.push.apply(errors, suberrors);
+        }
+      }
+      return errors;
+    });
+  }
+
+  function check(x, type) {
+    var errors = validate(x, type);
     if (errors) {
       var message = [].concat(errors).join('\n');
       debugger;
@@ -213,6 +236,7 @@
   }
 
   var exports = {
+    irreducible: irreducible,
     any: Any,
     mixed: Mixed,
     'void': Void,
@@ -225,6 +249,7 @@
     dict: dict,
     object: object,
     union: union,
+    args: args,
     check: check
   };
 
