@@ -1,12 +1,10 @@
 var tape = require('tape');
 var browserify = require('browserify');
-var reactify = require('reactify');
 var flowcheck = require('../index');
 
 function bundle(entry, cb) {
   return browserify(entry, {basedir: __dirname})
-    .transform(flowcheck)
-    .transform(reactify, {
+    .transform(flowcheck, {
       stripTypes: true
     })
     .bundle(cb);

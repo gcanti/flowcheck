@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>flowcheck demo</title>
+    <link type="text/css" rel="stylesheet" href="bootstrap.css"/>
+    <link type="text/css" rel="stylesheet" href="codemirror.css"/>
+    <script src="JSXTransformer.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+  <script id="example" type="text/example">// basic type
+var n: number = 1;
+
+// list
+var arr: Array<string> = ['a', 'b'];
+
+// ES6 class
+class Person {
+  constructor(name: string, age: number) {
+    this.name = name;
+    this.age = age;
+  }
+  toString(): string {
+    return this.name + ' ' + this.age;
+  }
+}
+
+var p: Person = new Person('Giulio', 41);
+console.log(p + '');
+  </script>
+  <script type="text/javascript" src="react.js"></script>
+  <script type="text/javascript" src="../../assert.js"></script>
+  <script type="text/javascript" src="bundle.js"></script>
+</html>
+
