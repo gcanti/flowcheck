@@ -5,6 +5,7 @@ var CodeMirror = require('react-code-mirror');
 require('codemirror/mode/javascript/javascript');
 var transform = require('../../transform');
 var beautify = require('js-beautify');
+window.f = require('../../assert');
 
 window.React = React;
 
@@ -65,10 +66,15 @@ var App = React.createClass({
   },
 
   run: function () {
-    eval(this.compile(this.state.value, {
-      harmony: true,
-      stripTypes: true
-    }));
+    try {
+      eval(this.compile(this.state.value, {
+        harmony: true,
+        stripTypes: true
+      }));
+    } catch (e) {
+      console.error(e);
+      this.setState({error: e.message});
+    }
   },
 
   render: function () {
@@ -80,53 +86,64 @@ var App = React.createClass({
     ) : null;
     return (
       <div className="container">
-        <div className="col-md-12">
-          <h1><a href="https://github.com/gcanti/flowcheck">flowcheck</a> compiler</h1>
-          <p className="lead">Runtime type checking for Flow and TypeScript </p>
-        </div>
-        <div className="col-md-5">
-          <p><b>Source</b></p>
-          <div className="form-group">
-            <CodeMirror
-              tabSize={2}
-              style={{border: '1px solid #F6E4CC'}}
-              textAreaClassName={['form-control']}
-              mode="javascript"
-              value={this.state.value}
-              onChange={this.onSourceChange} />
+        <div className="row">
+          <div className="col-md-5">
+            <h1><a href="https://github.com/gcanti/flowcheck">flowcheck</a> compiler</h1>
+            <p className="lead">Gradual type checking for Flow and TypeScript </p>
+          </div>
+          <div className="col-md-7">
+            <h3>Why?</h3>
+            <p><b>Use types today</b>, even if you don't use Flow or TypeScript, then strip the assertions in production.</p>
+            <h3>How it works?</h3>
+            <p>It adds an <b>assertion for each type annotation</b>.
+            The assertion module <code>f</code> checks the types at runtime. If an assert fails <b>the debugger kicks in</b> so you can inspect the stack and quickly find out what's wrong.</p>
           </div>
         </div>
-        <div className="col-md-7">
-          <p><b>Output</b></p>
-          <div className="form-group">
-            <CodeMirror
-              tabSize={2}
-              readOnly={true}
-              style={{border: '1px solid #F6E4CC'}}
-              textAreaClassName={['form-control']}
-              mode="javascript"
-              value={code}
-              smartIndent={false} />
+        <div className="row">
+          <div className="col-md-5">
+            <p><b>Source</b></p>
+            <div className="form-group">
+              <CodeMirror
+                tabSize={2}
+                style={{border: '1px solid #F6E4CC'}}
+                textAreaClassName={['form-control']}
+                mode="javascript"
+                value={this.state.value}
+                onChange={this.onSourceChange} />
+            </div>
           </div>
-          <div className="form-group">
-            <label className="checkbox-inline">
-              <input type="checkbox" id="assertions" checked={this.state.assertions} onChange={this.onAssertionsChange} /> assertions
-            </label>
-            <label className="checkbox-inline">
-              <input type="checkbox" id="harmony" checked={this.state.harmony} onChange={this.onHarmonyChange} /> harmony
-            </label>
-            <label className="checkbox-inline">
-              <input type="checkbox" id="stripTypes" checked={this.state.stripTypes} onChange={this.onStripTypesChange} /> stripTypes
-            </label>
-            <label className="checkbox-inline">
-              <input type="checkbox" id="beautify" checked={this.state.beautify} onChange={this.onBeautifyChange} /> beautify
-            </label>
-          </div>
-          <div className="form-group">
-            <button className="btn btn-primary" onClick={this.run}>Run (output to the console)</button>
-          </div>
-          <div className="form-group">
-            {alert}
+          <div className="col-md-7">
+            <p><b>Output</b></p>
+            <div className="form-group">
+              <CodeMirror
+                tabSize={2}
+                readOnly={true}
+                style={{border: '1px solid #F6E4CC'}}
+                textAreaClassName={['form-control']}
+                mode="javascript"
+                value={code}
+                smartIndent={false} />
+            </div>
+            <div className="form-group">
+              <label className="checkbox-inline">
+                <input type="checkbox" id="assertions" checked={this.state.assertions} onChange={this.onAssertionsChange} /> assertions
+              </label>
+              <label className="checkbox-inline">
+                <input type="checkbox" id="harmony" checked={this.state.harmony} onChange={this.onHarmonyChange} /> harmony
+              </label>
+              <label className="checkbox-inline">
+                <input type="checkbox" id="stripTypes" checked={this.state.stripTypes} onChange={this.onStripTypesChange} /> stripTypes
+              </label>
+              <label className="checkbox-inline">
+                <input type="checkbox" id="beautify" checked={this.state.beautify} onChange={this.onBeautifyChange} /> beautify
+              </label>
+            </div>
+            <div className="form-group">
+              <button className="btn btn-primary" onClick={this.run}>Run (output to the console)</button>
+            </div>
+            <div className="form-group">
+              {alert}
+            </div>
           </div>
         </div>
       </div>

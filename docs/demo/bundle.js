@@ -1,4 +1,264 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/Users/giulio/Documents/Projects/github/flowcheck/docs/demo/index.jsx":[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/Users/giulio/Documents/Projects/github/flowcheck/assert.js":[function(require,module,exports){
+(function (root, factory) {
+  'use strict';
+  if (typeof define === 'function' && define.amd) {
+    define([], factory);
+  } else if (typeof exports === 'object') {
+    module.exports = factory();
+  } else {
+    root.f = factory();
+  }
+}(this, function () {
+
+  'use strict';
+
+  function Failure(actual, expected, ctx) {
+    this.actual = actual;
+    this.expected = expected;
+    this.ctx = ctx;
+  }
+
+  Failure.prototype.toString = function () {
+    var ctx = this.ctx ? this.ctx.join(' / ') : '';
+    ctx = ctx ? ', context: ' + ctx : ', (no context)';
+    return 'Expected an instance of ' + this.expected.name +
+    ' got ' + JSON.stringify(this.actual) + ctx;
+  };
+
+  function Type(name, validate, is) {
+    this.name = name;
+    this.validate = validate;
+    if (is) { this.is = is; }
+  }
+
+  Type.prototype.is = function (x) {
+    return this.validate(x, null, true).ok;
+  };
+
+  function irreducible(name, is) {
+    var type = new Type(name, function (x, ctx) {
+      return is(x) ? null : [new Failure(x, type, ctx)];
+    }, is);
+    return type;
+  }
+
+  var Any = irreducible('any', function () {
+    return true;
+  });
+
+  var Mixed = irreducible('mixed', function () {
+    return true;
+  });
+
+  var Void = irreducible('void', function (x) {
+    return x === void 0;
+  });
+
+  var Str = irreducible('string', function (x) {
+    return typeof x === 'string';
+  });
+
+  var Num = irreducible('number', function (x) {
+    return typeof x === 'number' && isFinite(x) && !isNaN(x);
+  });
+
+  var Bool = irreducible('boolean', function (x) {
+    return x === true || x === false;
+  });
+
+  var Arr = irreducible('array', function (x) {
+    return x instanceof Array;
+  });
+
+  var Obj = irreducible('object', function (x) {
+    return x != null && typeof x === 'object' && !Arr.is(x);
+  });
+
+  function validate(x, type, ctx, fast) {
+    if (type.validate) { return type.validate(x, ctx, fast); }
+    return x instanceof type ? null : [new Failure(x, type, ctx)];
+  }
+
+  function list(type, name) {
+    name = name || 'Array<' + type.name + '>';
+    return new Type(name, function (x, ctx, fast) {
+      ctx = ctx || [];
+      ctx.push(name);
+      // if x is not an array, fail fast
+      if (!Arr.is(x)) { return [new Failure(x, Arr, ctx)]; }
+      var errors = null, suberrors;
+      for (var i = 0, len = x.length ; i < len ; i++ ) {
+        suberrors = validate(x[i], type, ctx.concat(i));
+        if (suberrors) {
+          if (fast) { return suberrors; }
+          errors = errors || [];
+          errors.push.apply(errors, suberrors);
+        }
+      }
+      return errors;
+    });
+  }
+
+  function maybe(type, name) {
+    name = name || '?' + type.name;
+    return new Type(name, function (x, ctx, fast) {
+      if (x == null) { return null; }
+      return validate(x, type, ctx, fast);
+    });
+  }
+
+  function getName(type) {
+    return type.name;
+  }
+
+  function tuple(types, name) {
+    name = name || '[' + types.map(getName).join(', ') + ']';
+    var dimension = types.length;
+    var type = new Type(name, function (x, ctx, fast) {
+      ctx = ctx || [];
+      // if x is not an array, fail fast
+      if (!Arr.is(x)) { return [new Failure(x, Arr, ctx.concat(name))]; }
+      // if x has a wrong length, fail fast
+      if (x.length !== dimension) { return [new Failure(x, type, ctx)]; }
+      var errors = null, suberrors;
+      for (var i = 0 ; i < dimension ; i++ ) {
+        suberrors = validate(x[i], types[i], ctx.concat(name, i));
+        if (suberrors) {
+          if (fast) { return suberrors; }
+          errors = errors || [];
+          errors.push.apply(errors, suberrors);
+        }
+      }
+      return errors;
+    });
+    return type;
+  }
+
+  function dict(domain, codomain, name) {
+    name = name || '{[key: ' + domain.name + ']: ' + codomain.name + '}';
+    return new Type(name, function (x, ctx, fast) {
+      ctx = ctx || [];
+      // if x is not an object, fail fast
+      if (!Obj.is(x)) { return [new Failure(x, Obj, ctx.concat(name))]; }
+      var errors = null, suberrors;
+      for (var k in x) {
+        if (x.hasOwnProperty(k)) {
+          // check domain
+          suberrors = validate(k, domain, ctx.concat(name, k));
+          if (suberrors) {
+            if (fast) { return suberrors; }
+            errors = errors || [];
+            errors.push.apply(errors, suberrors);
+          }
+          // check codomain
+          suberrors = validate(x[k], codomain, ctx.concat(name, k));
+          if (suberrors) {
+            if (fast) { return suberrors; }
+            errors = errors || [];
+            errors.push.apply(errors, suberrors);
+          }
+        }
+      }
+      return errors;
+    });
+  }
+
+  function object(props, name) {
+    name = name || '{' + Object.keys(props).map(function (k) { return k + ': ' + props[k].name + ';'; }).join(' ') + '}';
+    return new Type(name, function (x, ctx, fast) {
+      ctx = ctx || [];
+      // if x is not an object, fail fast
+      if (!Obj.is(x)) { return [new Failure(x, Obj, ctx.concat(name))]; }
+      var errors = null, suberrors;
+      for (var k in props) {
+        if (props.hasOwnProperty(k)) {
+          suberrors = validate(x[k], props[k], ctx.concat(name, k));
+          if (suberrors) {
+            if (fast) { return suberrors; }
+            errors = errors || [];
+            errors.push.apply(errors, suberrors);
+          }
+        }
+      }
+      return errors;
+    });
+  }
+
+  function union(types, name) {
+    name = name || types.map(getName).join(' | ');
+    var type = new Type(name, function (x, ctx) {
+      if (types.some(function (type) {
+        return type.is(x);
+      })) { return null; }
+      ctx = ctx || [];
+      return [new Failure(x, type, ctx.concat(name))];
+    });
+    return type;
+  }
+
+  function slice(arr, start, end) {
+    return Array.prototype.slice.call(arr, start, end);
+  }
+
+  function args(types, varargs) {
+    var name = '(' + types.map(getName).join(', ') + ', ...' + (varargs || Any).name + ')';
+    var len = types.length;
+    var typesTuple = tuple(types);
+    if (varargs) { varargs = list(varargs); }
+    return new Type(name, function (x, ctx, fast) {
+      ctx = ctx || [];
+      var errors = null, suberrors;
+      suberrors = typesTuple.validate(slice(x, 0, len), ctx.concat('arguments'), fast);
+      if (suberrors) {
+        if (fast) { return suberrors; }
+        errors = errors || [];
+        errors.push.apply(errors, suberrors);
+      }
+      if (varargs) {
+        suberrors = varargs.validate(slice(x, len), ctx.concat('varargs'), fast);
+        if (suberrors) {
+          if (fast) { return suberrors; }
+          errors = errors || [];
+          errors.push.apply(errors, suberrors);
+        }
+      }
+      return errors;
+    });
+  }
+
+  function check(x, type) {
+    var errors = validate(x, type);
+    if (errors) {
+      var message = [].concat(errors).join('\n');
+      debugger;
+      throw new TypeError(message);
+    }
+    return x;
+  }
+
+  var exports = {
+    irreducible: irreducible,
+    any: Any,
+    mixed: Mixed,
+    'void': Void,
+    number: Num,
+    string: Str,
+    'boolean': Bool,
+    list: list,
+    maybe: maybe,
+    tuple: tuple,
+    dict: dict,
+    object: object,
+    union: union,
+    args: args,
+    check: check
+  };
+
+  return exports;
+
+}));
+
+},{}],"/Users/giulio/Documents/Projects/github/flowcheck/docs/demo/index.jsx":[function(require,module,exports){
 'use strict';
 
 var React = require('react');
@@ -6,6 +266,7 @@ var CodeMirror = require('react-code-mirror');
 require('codemirror/mode/javascript/javascript');
 var transform = require('../../transform');
 var beautify = require('js-beautify');
+window.f = require('../../assert');
 
 window.React = React;
 
@@ -66,10 +327,15 @@ var App = React.createClass({displayName: "App",
   },
 
   run: function () {
-    eval(this.compile(this.state.value, {
-      harmony: true,
-      stripTypes: true
-    }));
+    try {
+      eval(this.compile(this.state.value, {
+        harmony: true,
+        stripTypes: true
+      }));
+    } catch (e) {
+      console.error(e);
+      this.setState({error: e.message});
+    }
   },
 
   render: function () {
@@ -81,53 +347,64 @@ var App = React.createClass({displayName: "App",
     ) : null;
     return (
       React.createElement("div", {className: "container"}, 
-        React.createElement("div", {className: "col-md-12"}, 
-          React.createElement("h1", null, React.createElement("a", {href: "https://github.com/gcanti/flowcheck"}, "flowcheck"), " compiler"), 
-          React.createElement("p", {className: "lead"}, "Runtime type checking for Flow and TypeScript ")
-        ), 
-        React.createElement("div", {className: "col-md-5"}, 
-          React.createElement("p", null, React.createElement("b", null, "Source")), 
-          React.createElement("div", {className: "form-group"}, 
-            React.createElement(CodeMirror, {
-              tabSize: 2, 
-              style: {border: '1px solid #F6E4CC'}, 
-              textAreaClassName: ['form-control'], 
-              mode: "javascript", 
-              value: this.state.value, 
-              onChange: this.onSourceChange})
+        React.createElement("div", {className: "row"}, 
+          React.createElement("div", {className: "col-md-5"}, 
+            React.createElement("h1", null, React.createElement("a", {href: "https://github.com/gcanti/flowcheck"}, "flowcheck"), " compiler"), 
+            React.createElement("p", {className: "lead"}, "Gradual type checking for Flow and TypeScript ")
+          ), 
+          React.createElement("div", {className: "col-md-7"}, 
+            React.createElement("h3", null, "Why?"), 
+            React.createElement("p", null, React.createElement("b", null, "Use types today"), ", even if you don't use Flow or TypeScript, then strip the assertions in production."), 
+            React.createElement("h3", null, "How it works?"), 
+            React.createElement("p", null, "It adds an ", React.createElement("b", null, "assertion for each type annotation"), "." + ' ' +
+            "The assertion module ", React.createElement("code", null, "f"), " checks the types at runtime. If an assert fails ", React.createElement("b", null, "the debugger kicks in"), " so you can inspect the stack and quickly find out what's wrong.")
           )
         ), 
-        React.createElement("div", {className: "col-md-7"}, 
-          React.createElement("p", null, React.createElement("b", null, "Output")), 
-          React.createElement("div", {className: "form-group"}, 
-            React.createElement(CodeMirror, {
-              tabSize: 2, 
-              readOnly: true, 
-              style: {border: '1px solid #F6E4CC'}, 
-              textAreaClassName: ['form-control'], 
-              mode: "javascript", 
-              value: code, 
-              smartIndent: false})
-          ), 
-          React.createElement("div", {className: "form-group"}, 
-            React.createElement("label", {className: "checkbox-inline"}, 
-              React.createElement("input", {type: "checkbox", id: "assertions", checked: this.state.assertions, onChange: this.onAssertionsChange}), " assertions"
-            ), 
-            React.createElement("label", {className: "checkbox-inline"}, 
-              React.createElement("input", {type: "checkbox", id: "harmony", checked: this.state.harmony, onChange: this.onHarmonyChange}), " harmony"
-            ), 
-            React.createElement("label", {className: "checkbox-inline"}, 
-              React.createElement("input", {type: "checkbox", id: "stripTypes", checked: this.state.stripTypes, onChange: this.onStripTypesChange}), " stripTypes"
-            ), 
-            React.createElement("label", {className: "checkbox-inline"}, 
-              React.createElement("input", {type: "checkbox", id: "beautify", checked: this.state.beautify, onChange: this.onBeautifyChange}), " beautify"
+        React.createElement("div", {className: "row"}, 
+          React.createElement("div", {className: "col-md-5"}, 
+            React.createElement("p", null, React.createElement("b", null, "Source")), 
+            React.createElement("div", {className: "form-group"}, 
+              React.createElement(CodeMirror, {
+                tabSize: 2, 
+                style: {border: '1px solid #F6E4CC'}, 
+                textAreaClassName: ['form-control'], 
+                mode: "javascript", 
+                value: this.state.value, 
+                onChange: this.onSourceChange})
             )
           ), 
-          React.createElement("div", {className: "form-group"}, 
-            React.createElement("button", {className: "btn btn-primary", onClick: this.run}, "Run (output to the console)")
-          ), 
-          React.createElement("div", {className: "form-group"}, 
-            alert
+          React.createElement("div", {className: "col-md-7"}, 
+            React.createElement("p", null, React.createElement("b", null, "Output")), 
+            React.createElement("div", {className: "form-group"}, 
+              React.createElement(CodeMirror, {
+                tabSize: 2, 
+                readOnly: true, 
+                style: {border: '1px solid #F6E4CC'}, 
+                textAreaClassName: ['form-control'], 
+                mode: "javascript", 
+                value: code, 
+                smartIndent: false})
+            ), 
+            React.createElement("div", {className: "form-group"}, 
+              React.createElement("label", {className: "checkbox-inline"}, 
+                React.createElement("input", {type: "checkbox", id: "assertions", checked: this.state.assertions, onChange: this.onAssertionsChange}), " assertions"
+              ), 
+              React.createElement("label", {className: "checkbox-inline"}, 
+                React.createElement("input", {type: "checkbox", id: "harmony", checked: this.state.harmony, onChange: this.onHarmonyChange}), " harmony"
+              ), 
+              React.createElement("label", {className: "checkbox-inline"}, 
+                React.createElement("input", {type: "checkbox", id: "stripTypes", checked: this.state.stripTypes, onChange: this.onStripTypesChange}), " stripTypes"
+              ), 
+              React.createElement("label", {className: "checkbox-inline"}, 
+                React.createElement("input", {type: "checkbox", id: "beautify", checked: this.state.beautify, onChange: this.onBeautifyChange}), " beautify"
+              )
+            ), 
+            React.createElement("div", {className: "form-group"}, 
+              React.createElement("button", {className: "btn btn-primary", onClick: this.run}, "Run (output to the console)")
+            ), 
+            React.createElement("div", {className: "form-group"}, 
+              alert
+            )
           )
         )
       )
@@ -137,7 +414,7 @@ var App = React.createClass({displayName: "App",
 });
 
 React.render(React.createElement(App, null), document.getElementById('app'));
-},{"../../transform":"/Users/giulio/Documents/Projects/github/flowcheck/transform.js","codemirror/mode/javascript/javascript":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/codemirror/mode/javascript/javascript.js","js-beautify":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/js-beautify/js/index.js","react":"react","react-code-mirror":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/react-code-mirror/index.js"}],"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/codemirror/lib/codemirror.js":[function(require,module,exports){
+},{"../../assert":"/Users/giulio/Documents/Projects/github/flowcheck/assert.js","../../transform":"/Users/giulio/Documents/Projects/github/flowcheck/transform.js","codemirror/mode/javascript/javascript":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/codemirror/mode/javascript/javascript.js","js-beautify":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/js-beautify/js/index.js","react":"react","react-code-mirror":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/react-code-mirror/index.js"}],"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/codemirror/lib/codemirror.js":[function(require,module,exports){
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
