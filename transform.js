@@ -7,8 +7,8 @@ var visitorList = require('./visitors').visitorList;
 function transform(source, options) {
 
   options = options || {};
-  options.typeAssertionModule = options.typeAssertionModule || 'dike';
-  options.typeAssertionVariable = options.typeAssertionVariable || 'f';
+  options.typeAssertionModule = options['type-assertion-module'] || options.typeAssertionModule || 'flowtype/assert';
+  options.typeAssertionVariable = options['type-assertion-variable'] || options.typeAssertionVariable || 'f';
   options.sourceMap = true;
 
   var code = jstransform.transform(visitorList, source, options).code;

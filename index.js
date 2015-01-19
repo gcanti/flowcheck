@@ -1,0 +1,27 @@
+'use strict';
+
+var transform = require('./transform');
+var through = require('through');
+
+module.exports = function (file, options) {
+
+  var data = '';
+  function write(chunk) {
+    return data += chunk;
+  }
+
+  function compile() {
+    try {
+      var transformed = transform(data, options);
+      this.queue(transformed);
+    } catch (error) {
+      error.name = 'FlowcheckError';
+      error.message = file + ': ' + error.message;
+      error.fileName = file;
+      this.emit('error', error);
+    }
+    return this.queue(null);
+  }
+
+  return through(write, compile);
+};

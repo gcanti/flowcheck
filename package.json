@@ -17,12 +17,15 @@
     "url": "https://github.com/gcanti/flowcheck/issues"
   },
   "homepage": "https://github.com/gcanti/flowcheck",
+  "dependencies": {
+    "jstransform": "^8.2.0",
+    "through": "^2.3.6"
+  },
   "devDependencies": {
+    "browserify": "^8.1.1",
+    "reactify": "^0.17.1",
     "tap-spec": "^2.1.1",
     "tape": "^3.0.3",
     "testling": "^1.7.1"
-  },
-  "dependencies": {
-    "jstransform": "^8.2.0"
   }
 }
