@@ -167,7 +167,7 @@ tape('dict', function (tape) {
 
 tape('object', function (tape) {
 
-  tape.plan(5);
+  tape.plan(7);
 
   tape.strictEqual(
     f.object({a: f.number, b: f.string}).name,
@@ -194,9 +194,21 @@ tape('object', function (tape) {
   );
 
   tape.strictEqual(
+    f.object({a: f.maybe(f.number)}).validate({}) + '',
+    'Expected an instance of number got undefined, context: {a: ?number;} / a / ?number',
+    'should fail if a key is not specified'
+  );
+
+  tape.strictEqual(
     f.object({a: f.number, b: f.string}).validate({a: 1, b: 's'}),
     null,
     'should succeed if x is an instance of T'
+  );
+
+  tape.strictEqual(
+    f.object({a: f.number}).validate({a: 1, b: 's'}),
+    null,
+    'should succeed if x owns an additional property'
   );
 
 });
