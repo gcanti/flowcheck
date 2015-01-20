@@ -1,8 +1,8 @@
 var tape = require('tape');
-var transform = require('../transform');
+var transform = require('../transform').transform;
 
 tape('declarations', function (tape) {
-  tape.plan(12);
+  tape.plan(13);
 
   tape.strictEqual(
     transform('var x: string = "a";'),
@@ -29,57 +29,63 @@ tape('declarations', function (tape) {
   );
 
   tape.strictEqual(
-    transform('var x: mixed = null'),
-    'var x: mixed = f.check(null, f.mixed)',
+    transform('var x: mixed = null;'),
+    'var x: mixed = f.check(null, f.mixed);',
     'mixed type'
   );
 
   tape.strictEqual(
-    transform('var x: ?string = null'),
-    'var x: ?string = f.check(null, f.maybe(f.string))',
+    transform('var x: ?string = null;'),
+    'var x: ?string = f.check(null, f.maybe(f.string));',
     'maybe type'
   );
 
   tape.strictEqual(
-    transform('var x: string[] = []'),
-    'var x: string[] = f.check([], f.list(f.string))',
+    transform('var x: Array = [\'a\'];'),
+    'var x: Array = f.check([\'a\'], f.list(f.any));',
+    'Array'
+  );
+
+  tape.strictEqual(
+    transform('var x: string[] = [];'),
+    'var x: string[] = f.check([], f.list(f.string));',
     'array type ([] syntax)'
   );
 
   tape.strictEqual(
-    transform('var x: Array<string> = []'),
-    'var x: Array<string> = f.check([], f.list(f.string))',
+    transform('var x: Array<string> = [];'),
+    'var x: Array<string> = f.check([], f.list(f.string));',
     'array type (Array<> syntax)'
   );
 
   tape.strictEqual(
-    transform('var x: [string, number] = []'),
-    'var x: [string, number] = f.check([], f.tuple([f.string, f.number]))',
+    transform('var x: [string, number] = [];'),
+    'var x: [string, number] = f.check([], f.tuple([f.string, f.number]));',
     'tuple'
   );
 
   tape.strictEqual(
-    transform('var x: {a: string; b: number;} = {}'),
-    'var x: {a: string; b: number;} = f.check({}, f.object({a: f.string, b: f.number}))',
+    transform('var x: {a: string; b: number;} = {};'),
+    'var x: {a: string; b: number;} = f.check({}, f.object({a: f.string, b: f.number}));',
     'object (shape)'
   );
 
   tape.strictEqual(
-    transform('var x: {[key: string]: number} = {a: 1, b: 2}'),
-    'var x: {[key: string]: number} = f.check({a: 1, b: 2}, f.dict(f.string, f.number))',
+    transform('var x: {[key: string]: number} = {a: 1, b: 2};'),
+    'var x: {[key: string]: number} = f.check({a: 1, b: 2}, f.dict(f.string, f.number));',
     'object (dict)'
   );
 
   tape.strictEqual(
-    transform('var x: string | number = 1'),
-    'var x: string | number = f.check(1, f.union([f.string, f.number]))',
+    transform('var x: string | number = 1;'),
+    'var x: string | number = f.check(1, f.union([f.string, f.number]));',
     'union'
   );
 
 });
 
 tape('functions', function (tape) {
-  tape.plan(6);
+  tape.plan(7);
 
   tape.strictEqual(
     transform('function fn(s: string) { return s; } // comment'),
@@ -115,6 +121,29 @@ tape('functions', function (tape) {
     transform('var n: number = (function (n: number) { return n; })(1); // comment'),
     'var n: number = f.check((function (n: number) {f.check(arguments, f.args([f.number])); return n; })(1), f.number); // comment',
     'called expression'
+  );
+
+  tape.strictEqual(
+    transform('function bar(...w: number) {}'),
+    'function bar(...w: number) {f.check(arguments, f.args([], f.number));}',
+    'varargs'
+  );
+
+});
+
+tape('type alias', function (tape) {
+  tape.plan(2);
+
+  tape.strictEqual(
+    transform('type X = Array<number>;'),
+    'type X = Array<number>;var X = f.list(f.number);',
+    'basic'
+  );
+
+  tape.strictEqual(
+    transform('type X = A<Y>;'),
+    'type X = A<Y>;var X = A;',
+    'generics'
   );
 
 });

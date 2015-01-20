@@ -49,20 +49,18 @@ function getType(ann, ns) {
 
       case Syntax.GenericTypeAnnotation :
         if (ann.id.type === Syntax.Identifier) {
-          var id = ann.id.name;
+          var name = ann.id.name;
           // handle mixed type
-          if (id === 'mixed') {
+          if (name === 'mixed') {
             return getProperty('mixed', ns);
           }
-          if (ann.typeParameters) {
-            // handle Array<T>
-            var params = ann.typeParameters.params;
-            if (params.length === 1) {
-              return getProperty('list', ns) + '(' + getType(params[0], ns) + ')';
-            }
+          // handle Array, Array<T>
+          if (name === 'Array') {
+            var typeParameters = ann.typeParameters ? ann.typeParameters.params : [];
+            return getProperty('list', ns) + '(' + getType(typeParameters[0], ns) + ')';
           }
-          // handle generic T, es: `var a: Person`
-          return id;
+          // fallback e.g: `var a: Person` or `T<U>`
+          return name;
         }
 
       case Syntax.TupleTypeAnnotation :
@@ -152,12 +150,33 @@ function visitTypedFunction(traverse, node, path, state) {
 }
 visitTypedFunction.test = function(node, path, state) {
   return (node.type === Syntax.FunctionDeclaration || node.type === Syntax.FunctionExpression) &&
-  (node.returnType || node.params.some(function (param) { return !!param.typeAnnotation; }));
+  (
+    node.returnType ||
+    (node.rest && node.rest.typeAnnotation) ||
+    node.params.some(function (param) { return !!param.typeAnnotation; })
+  );
+};
+
+//
+// type aliases
+//
+
+function visitTypeAlias(traverse, node, path, state) {
+  var ns = getOption('namespace', state);
+  var name = node.id.name;
+  var type = getType(node.right, ns);
+  utils.catchup(node.range[1], state);
+  utils.append('var ' + name + ' = ' + type + ';', state);
+  return false;
+}
+visitTypeAlias.test = function (node, path, state) {
+  return node.type === Syntax.TypeAlias;
 };
 
 module.exports = {
   visitorList: [
     visitTypedFunction,
-    visitTypedVariableDeclarator
+    visitTypedVariableDeclarator,
+    visitTypeAlias
   ]
 };
