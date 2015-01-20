@@ -10,7 +10,7 @@ function getOptions(options) {
   options.assertions =  typeof options.assertions === 'undefined' ? true : options.assertions;
   options.module =      options['module'] || options.module || 'flowtype/assert';
   options.namespace =   options.namespace || 'f';
-  options.sourceMap = options['source-map'] || options.sourceMap;
+  options.sourceMap =   options['source-map'] || options.sourceMap;
   return options;
 }
 
@@ -28,6 +28,7 @@ function inlineSourceMap(sourceMap, sourceCode, sourceFilename) {
 }
 
 module.exports = {
+
   transform: function(input, options) {
     var output = innerTransform(input, options);
     var result = output.code;
@@ -41,6 +42,7 @@ module.exports = {
     }
     return result;
   },
+
   transformWithDetails: function(input, options) {
     var output = innerTransform(input, options);
     var result = {};
@@ -50,4 +52,5 @@ module.exports = {
     }
     return result;
   }
+
 };

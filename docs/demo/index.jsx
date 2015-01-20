@@ -5,8 +5,8 @@ var CodeMirror = require('react-code-mirror');
 require('codemirror/mode/javascript/javascript');
 var transform = require('../../transform').transform;
 var beautify = require('js-beautify');
-window.f = require('../../assert');
 
+window.f = require('../../assert');
 window.React = React;
 
 var defaultValue = document.getElementById('example').innerText;

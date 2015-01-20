@@ -2,7 +2,7 @@
 
 Use types annotations today, even if you don't actually use Flow (or TypeScript). Then strip the assertions in production.
 
-Flowcheck comes with a built-in browserify transformer for a seamless workflow integration.
+Flowcheck comes with a built-in browserify transformer and supports sourcemaps for a seamless workflow integration.
 
 You can even use Flowcheck as a general purpose validation library.
 
@@ -16,8 +16,27 @@ If an assert fails the debugger kicks in so you can inspect the stack and quickl
 
 1. Write your code adding type annotations
 2. (optional) enable the Flow static type checker
-3. enable Flowcheck.js and strip type annotations (e.g. with jsx or 6to5) during development
+3. enable Flowcheck.js and strip type annotations (with react-tools or 6to5) during development
 4. disable Flowcheck.js in production for zero overhead
+
+# Roadmap
+
+- core
+  - handle `Object`, `Function` type annotations
+  - tuples must have at most 8 elements
+  - handle typed class members (e.g `class C { x: string; }`)
+  - handle intersection types
+  - handle declarations
+  - add some (opt-in) extra features derived from [tcomb](https://github.com/gcanti/tcomb) (notably subtypes)
+  - automatic import of flowcheck/assert module
+  - tests, tests and tests
+  - even more tests
+- polymorphic
+  - handle polymorphic functions (e.g. `function foo<X>(x: X): X { return x; }`)
+  - handle polymorphic classes (e.g. `class C<X> { x: X; }`)
+- tooling
+  - gulp plugin
+  - require hook (?)
 
 # Modules
 
@@ -54,10 +73,10 @@ Failure = {
 
 `transform(source: string, options: ?object): string`
 
-Options
+Options:
 
-- module: string (default `flowcheck/assert`)
-- namespace: string (default `f`)
+- `namespace`: string (default `f`)
+- `sourceMap`: boolean (default `false`)
 
 # Assert library API
 
@@ -85,7 +104,7 @@ Returns a type representing the object `{p1: T1, p2: T2, ... p3: T3}`.
 
 `f.dict(domain: Type, codomain: Type, name: ?string): Type`
 
-Returns a type representing the nullable type `?type`.
+Returns a type representing the dictionary type `{[key: domain]: codomain}`.
 
 `f.maybe(type: Type, name: ?string): Type`
 

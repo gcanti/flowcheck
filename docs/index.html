@@ -82,7 +82,7 @@
         <div class="col-md-4">
           <h2 class="text-center">Why?</h2>
           <p>Use <b>types annotations today</b>, even if you don't actually use Flow (or TypeScript). Then strip the assertions in production.</p>
-          <p>Flowcheck comes with a built-in <b>browserify</b> transformer for a seamless workflow integration.</p>
+          <p>Flowcheck comes with a built-in <b>browserify</b> transformer and supports sourcemaps for a seamless workflow integration.</p>
           <p>You can even use Flowcheck as a <b>general purpose validation</b> library.</p>
         </div>
         <div class="col-md-4">
@@ -95,7 +95,7 @@
           <ol>
             <li>Write your code adding type annotations</li>
             <li>(<b>optional</b>) enable the Flow static type checker</li>
-            <li>enable Flowcheck.js and strip type annotations (e.g. with jsx or 6to5) during <b>development</b></li>
+            <li>enable Flowcheck.js and strip type annotations (with react-tools or 6to5) during <b>development</b></li>
             <li>disable Flowcheck.js in <b>production</b> for zero overhead</li>
           </ol>
         </div>
@@ -109,11 +109,11 @@
         <div class="col-md-6">
           <p class="lead text-center">Source</p>
 <pre><code>
-// primitives
+// basic types
 var n: number = 1;
 
 // lists
-var arr: Array<string> = ['a', 'b'];
+var arr: Array&lt;string&gt; = ['a', 'b'];
 
 // functions
 function sum(a: number, b: number) {
@@ -121,7 +121,7 @@ function sum(a: number, b: number) {
 }
 
 // type alias
-type MyType = Array<number>;
+type MyType = Array&lt;number&gt;;
 
 // ES6 classes
 class Person {
@@ -135,7 +135,7 @@ class Person {
         <div class="col-md-6">
           <p class="lead text-center">Output</p>
 <pre><code>
-// primitives
+// basic types
 var n = f.check(1, f.number);
 
 // lists
