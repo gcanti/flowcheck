@@ -85,7 +85,7 @@ tape('declarations', function (tape) {
 });
 
 tape('functions', function (tape) {
-  tape.plan(7);
+  tape.plan(8);
 
   tape.strictEqual(
     transform('function fn(s: string) { return s; } // comment'),
@@ -127,6 +127,12 @@ tape('functions', function (tape) {
     transform('function bar(...w: number) {}'),
     'function bar(...w: number) {f.check(arguments, f.args([], f.number));}',
     'varargs'
+  );
+
+  tape.strictEqual(
+    transform('function map(fn: (x: T) => U) {}'),
+    'function map(fn: (x: T) => U) {f.check(arguments, f.args([f.fun]));}',
+    'should convert a generic function in f.fun'
   );
 
 });
