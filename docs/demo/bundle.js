@@ -102,7 +102,9 @@
   function maybe(type, name) {
     name = name || '?' + type.name;
     return new Type(name, function (x, ctx, fast) {
-      if (x == null) { return null; }
+      if (x === null) { return null; }
+      ctx = ctx || [];
+      ctx.push(name);
       return validate(x, type, ctx, fast);
     });
   }
@@ -23452,7 +23454,6 @@ var jstransform = require('jstransform');
 var utils = require('jstransform/src/utils');
 
 var Syntax = jstransform.Syntax;
-//console.log(Syntax);
 
 //
 // utils
@@ -23535,6 +23536,14 @@ function getType(ann, ns) {
         return getProperty('union', ns) + '([' + ann.types.map(function (type) {
           return getType(type, ns);
         }).join(', ') + '])';
+
+      case Syntax.FunctionTypeAnnotation :
+        // handle (x: T) => U
+        return getProperty('fun', ns);
+
+      default :
+        debug(ann);
+
     }
   }
   return getProperty('any', ns);
