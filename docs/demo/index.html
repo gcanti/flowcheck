@@ -4,24 +4,52 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>flowcheck demo</title>
-    <link type="text/css" rel="stylesheet" href="bootstrap.css"/>
+    <title>Flowcheck.js compiler</title>
+    <link type="text/css" rel="stylesheet" href="../css/bootstrap.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/style.css"/>
     <link type="text/css" rel="stylesheet" href="codemirror.css"/>
     <script src="JSXTransformer.js"></script>
+    <style type="text/css">
+    .CodeMirror {
+      font-family: Menlo, monospace;
+      font-size: 12px;
+      line-height: 18px;
+      padding: 20px;
+      min-height: 400px;
+    }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div class="container">
+      <header>
+        <div class="row">
+          <div class="col-xs-6">
+            <a href="../index.html">Flowcheck</a>
+          </div>
+          <div class="col-xs-6 text-right">
+            Open source (MIT). Made by Giulio Canti
+          </div>
+        </div>
+      </header>
+      <div className="row">
+        <div className="col-md-12">
+          <h1>Flowcheck compiler</h1>
+        </div>
+      </div>
+      <div id="app"></div>
+    </div>
   </body>
-  <script id="example" type="text/example">// basic type
+  <script id="example" type="text/example">// primitives
 var n: number = 1; // change to 'a' and try to run the code
 
-// list
+// lists
 var arr: Array<string> = ['a', 'b'];
 
-// use maybe, tuples, objects, dictionaries, unions
-// see http://flowtype.org
+// type alias
+type MyType = Array<number>;
+var mytype: MyType = [1];
 
-// ES6 class
+// ES6 classes
 class Person {
   constructor(name: string, age: number) {
     this.name = name;

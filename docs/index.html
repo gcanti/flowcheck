@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flowcheck.js</title>
+    <meta name="description" content="Domain driven design and type checking for JavaScript">
+    <meta name="keywords" content="JavaScript Domain Driven design type checking">
+    <!--[if lt IE 9]>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/json3/3.3.2/json3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.0.5/es5-shim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.0.5/es5-sham.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="css/bootstrap.css"/>
+    <link type="text/css" rel="stylesheet" href="css/highlight.github.css"/>
+    <link type="text/css" rel="stylesheet" href="css/style.css"/>
+    <style>
+    .landing-header {
+      background-color: #333;
+      color: #727272;
+      padding: 4em 0;
+      position: relative;
+      text-align: center;
+    }
+    .landing-header h1 {
+      font-weight: 300;
+      color: #fff;
+      padding: 1em 0;
+    }
+    .subheader {
+      background-color: #CC2E39;
+      padding: 20px 0;
+      text-align: center;
+      -webkit-box-shadow: 0px 1px 4px 0px rgba(0,0,0,0.2);
+      -moz-box-shadow: 0px 1px 4px 0px rgba(0,0,0,0.2);
+      box-shadow: 0px 1px 4px 0px rgba(0,0,0,0.2);
+    }
+    .subheader a {
+      color: #fff;
+    }
+    h2 {
+      margin: 2em 0 1em 0;
+    }
+    img {
+      padding-top: 2em;
+      display: block;
+      width: 340px;
+      margin: auto;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="landing-header">
+      <div class="container">
+        <p class="lead">Flowcheck.js</p>
+        <h1>Runtime type checking for Flow.</h1>
+        <p class="lead">"Si vis pacem, para bellum"<br/>(Vegetius 5th century)</p>
+      </div>
+    </div>
+    <div class="subheader lead">
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-3">
+            <a href="https://twitter.com/GiulioCanti">Twitter</a>
+          </div>
+          <div class="col-xs-3">
+            <a href="https://gcanti.github.io">Blog</a>
+          </div>
+          <div class="col-xs-3">
+            <a href="https://github.com/gcanti/tcomb">Github</a>
+          </div>
+          <div class="col-xs-3">
+            <a href="demo/index.html">Demo</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h2 class="text-center">Why?</h2>
+          <p>Use <b>types annotations today</b>, even if you don't actually use Flow (or TypeScript). Then strip the assertions in production.</p>
+          <p>Flowcheck comes with a built-in <b>browserify</b> transformer for a seamless workflow integration.</p>
+          <p>You can even use Flowcheck as a <b>general purpose validation</b> library.</p>
+        </div>
+        <div class="col-md-4">
+          <h2 class="text-center">How it works?</h2>
+          <p>Flowcheck adds <b>asserts</b> for each type annotation using <a href="https://github.com/facebook/jstransform/">jstransform</a>.</p>
+          <p>If an assert fails <b>the debugger kicks in</b> so you can inspect the stack and quickly find out what's wrong.</p>
+        </div>
+        <div class="col-md-4">
+          <h2 class="text-center">Workflow</h2>
+          <ol>
+            <li>Write your code adding type annotations</li>
+            <li>(<b>optional</b>) enable the Flow static type checker</li>
+            <li>enable Flowcheck.js and strip type annotations (e.g. with jsx or 6to5) during <b>development</b></li>
+            <li>disable Flowcheck.js in <b>production</b> for zero overhead</li>
+          </ol>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <h2 class="text-center">Examples</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <p class="lead text-center">Source</p>
+<pre><code>
+// primitives
+var n: number = 1;
+
+// lists
+var arr: Array<string> = ['a', 'b'];
+
+// functions
+function sum(a: number, b: number) {
+  return a + b;
+}
+
+// type alias
+type MyType = Array<number>;
+
+// ES6 classes
+class Person {
+  constructor(name: string, age: number) {
+    this.name = name;
+    this.age = age;
+  }
+}
+</code></pre>
+        </div>
+        <div class="col-md-6">
+          <p class="lead text-center">Output</p>
+<pre><code>
+// primitives
+var n = f.check(1, f.number);
+
+// lists
+var arr = f.check(['a', 'b'], f.list(f.string));
+
+// functions
+function sum(a, b) {
+  f.check(arguments, f.args([f.number, f.number]));
+  return a + b;
+}
+
+// type alias
+var MyType = f.list(f.number);
+
+// ES6 classes
+class Person {
+  constructor(name, age) {
+    f.check(arguments, f.args([f.string, f.number]));
+    this.name = name;
+    this.age = age;
+  }
+}
+</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <footer>
+        <div class="row">
+          <div class="col-xs-6">
+            <a href="https://twitter.com/GiulioCanti">Twitter</a> -
+            <a href="https://gcanti.github.io">Blog</a> -
+            <a href="https://github.com/gcanti/tcomb">Github</a> -
+            <a href="guide/index.html">Docs</a>
+          </div>
+          <div class="col-xs-6 text-right">
+            Open source (MIT). Made by Giulio Canti
+          </div>
+        </div>
+      </footer>
+    </div>
+  </body>
+  <script type="text/javascript" src="js/highlight.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+</html>
+

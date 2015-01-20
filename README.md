@@ -1,10 +1,31 @@
-flowcheck modules:
+# Why?
+
+Use types annotations today, even if you don't actually use Flow (or TypeScript). Then strip the assertions in production.
+
+Flowcheck comes with a built-in browserify transformer for a seamless workflow integration.
+
+You can even use Flowcheck as a general purpose validation library.
+
+# How it works?
+
+Flowcheck adds asserts for each type annotation using jstransform.
+
+If an assert fails the debugger kicks in so you can inspect the stack and quickly find out what's wrong.
+
+# Workflow
+
+1. Write your code adding type annotations
+2. (optional) enable the Flow static type checker
+3. enable Flowcheck.js and strip type annotations (e.g. with jsx or 6to5) during development
+4. disable Flowcheck.js in production for zero overhead
+
+# Modules
 
 - a **source transformer** (transform.js)
 - a **browserify transformer** (index.js)
 - a **runtime assertion library** (assert.js)
 
-The transformer adds an assertion for each type annotation.
+The transformer adds assertions for each type annotation.
 
 The assertion module checks the types at runtime. If an assert fails **the debugger kicks in** so you can inspect the stack and quickly find out what's wrong.
 
@@ -29,13 +50,9 @@ Failure = {
 }
 ```
 
-So you can also use flowcheck's assert module as a **general purpose validation** library.
-
 # API
 
 `transform(source: string, options: ?object): string`
-
-Inserts the type assertions.
 
 Options
 
@@ -44,9 +61,9 @@ Options
 
 # Assert library API
 
-`f.irreducible(name: string, is: (x: any) => boolean): Type`
+`f.define(name: string, is: (x: any) => boolean): Type`
 
-Defines a new irreducible type,
+Defines a new basic type.
 
 `f.check(value: T, type: Type): T`
 
