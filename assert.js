@@ -101,7 +101,9 @@
   function maybe(type, name) {
     name = name || '?' + type.name;
     return new Type(name, function (x, ctx, fast) {
-      if (x == null) { return null; }
+      if (x === null) { return null; }
+      ctx = ctx || [];
+      ctx.push(name);
       return validate(x, type, ctx, fast);
     });
   }

@@ -55,7 +55,7 @@ tape('maybe', function (tape) {
 
   tape.strictEqual(
     f.maybe(f.number).validate('s') + '',
-    'Expected an instance of number got "s", (no context)',
+    'Expected an instance of number got "s", context: ?number',
     'should fail if x is not an instance of T'
   );
 
@@ -66,9 +66,9 @@ tape('maybe', function (tape) {
   );
 
   tape.strictEqual(
-    f.maybe(f.number).validate(undefined),
-    null,
-    'should succeed if x is undefined'
+    f.maybe(f.number).validate(undefined) + '',
+    'Expected an instance of number got undefined, context: ?number',
+    'should fail if x is undefined'
   );
 
   tape.strictEqual(
