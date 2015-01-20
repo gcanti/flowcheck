@@ -73,6 +73,10 @@
     return x != null && typeof x === 'object' && !Arr.is(x);
   });
 
+  var Fun = define('fun', function (x) {
+    return typeof x === 'function';
+  });
+
   function validate(x, type, ctx, fast) {
     if (type.validate) { return type.validate(x, ctx, fast); }
     return x instanceof type ? null : [new Failure(x, type, ctx)];
@@ -246,6 +250,7 @@
     number: Num,
     string: Str,
     'boolean': Bool,
+    fun: Fun,
     list: list,
     maybe: maybe,
     tuple: tuple,
