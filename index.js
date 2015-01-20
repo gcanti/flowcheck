@@ -1,6 +1,6 @@
 'use strict';
 
-var transform = require('./transform');
+var transform = require('./transform').transform;
 var through = require('through');
 
 module.exports = function (file, options) {

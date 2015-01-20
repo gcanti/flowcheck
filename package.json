@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "browserify test | testling -u",
-    "test-node": "node test | tap-spec",
+    "node-test": "node test | tap-spec",
     "demo": "watchify -t reactify docs/demo/index.jsx -o docs/demo/bundle.js -v -x react"
   },
   "repository": {
@@ -23,10 +23,12 @@
     "through": "^2.3.6"
   },
   "devDependencies": {
+    "6to5ify": "^3.1.2",
     "browserify": "^8.1.1",
     "codemirror": "^4.11.0",
     "js-beautify": "^1.5.4",
     "react-code-mirror": "^3.0.3",
+    "reactify": "^0.17.1",
     "tap-spec": "^2.1.1",
     "tape": "^3.0.3",
     "testling": "^1.7.1"
