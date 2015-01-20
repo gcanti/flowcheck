@@ -1,3 +1,3 @@
 require('./assert');
-require('./transform');
-require('./flowcheck');
+require('./visitors');
+require('./browserify');

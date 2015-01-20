@@ -1,7 +1,7 @@
 var tape = require('tape');
 var f = require('../assert');
 
-tape('list', function (tape) {
+tape('list()', function (tape) {
 
   tape.plan(5);
 
@@ -37,7 +37,7 @@ tape('list', function (tape) {
 
 });
 
-tape('maybe', function (tape) {
+tape('maybe()', function (tape) {
 
   tape.plan(6);
 
@@ -79,7 +79,7 @@ tape('maybe', function (tape) {
 
 });
 
-tape('tuple', function (tape) {
+tape('tuple()', function (tape) {
 
   tape.plan(6);
 
@@ -121,7 +121,7 @@ tape('tuple', function (tape) {
 
 });
 
-tape('dict', function (tape) {
+tape('dict()', function (tape) {
 
   tape.plan(5);
 
@@ -165,7 +165,7 @@ tape('dict', function (tape) {
 
 });
 
-tape('object', function (tape) {
+tape('object()', function (tape) {
 
   tape.plan(7);
 
@@ -213,7 +213,7 @@ tape('object', function (tape) {
 
 });
 
-tape('union', function (tape) {
+tape('union()', function (tape) {
 
   tape.plan(4);
 
@@ -243,7 +243,7 @@ tape('union', function (tape) {
 
 });
 
-tape('args', function (tape) {
+tape('args()', function (tape) {
 
   tape.plan(6);
 

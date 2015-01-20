@@ -1,8 +1,8 @@
 var tape = require('tape');
 var transform = require('../transform').transform;
 
-tape('declarations', function (tape) {
-  tape.plan(13);
+tape('variables', function (tape) {
+  tape.plan(5);
 
   tape.strictEqual(
     transform('var x: string = "a";'),
@@ -34,11 +34,10 @@ tape('declarations', function (tape) {
     'mixed type'
   );
 
-  tape.strictEqual(
-    transform('var x: ?string = null;'),
-    'var x: ?string = f.check(null, f.maybe(f.string));',
-    'maybe type'
-  );
+});
+
+tape('lists', function (tape) {
+  tape.plan(3);
 
   tape.strictEqual(
     transform('var x: Array = [\'a\'];'),
@@ -58,11 +57,32 @@ tape('declarations', function (tape) {
     'array type (Array<> syntax)'
   );
 
+});
+
+tape('maybe types', function (tape) {
+  tape.plan(1);
+
   tape.strictEqual(
-    transform('var x: [string, number] = [];'),
-    'var x: [string, number] = f.check([], f.tuple([f.string, f.number]));',
-    'tuple'
+    transform('var x: ?string = null;'),
+    'var x: ?string = f.check(null, f.maybe(f.string));',
+    'maybe type'
   );
+
+});
+
+tape('objects as dictionaries', function (tape) {
+  tape.plan(1);
+
+  tape.strictEqual(
+    transform('var x: {[key: string]: number} = {a: 1, b: 2};'),
+    'var x: {[key: string]: number} = f.check({a: 1, b: 2}, f.dict(f.string, f.number));',
+    'object (dict)'
+  );
+
+});
+
+tape('objects as maps', function (tape) {
+  tape.plan(1);
 
   tape.strictEqual(
     transform('var x: {a: string; b: number;} = {};'),
@@ -70,11 +90,21 @@ tape('declarations', function (tape) {
     'object (shape)'
   );
 
+});
+
+tape('tuples', function (tape) {
+  tape.plan(1);
+
   tape.strictEqual(
-    transform('var x: {[key: string]: number} = {a: 1, b: 2};'),
-    'var x: {[key: string]: number} = f.check({a: 1, b: 2}, f.dict(f.string, f.number));',
-    'object (dict)'
+    transform('var x: [string, number] = [];'),
+    'var x: [string, number] = f.check([], f.tuple([f.string, f.number]));',
+    'tuple'
   );
+
+});
+
+tape('unions', function (tape) {
+  tape.plan(1);
 
   tape.strictEqual(
     transform('var x: string | number = 1;'),
@@ -85,7 +115,7 @@ tape('declarations', function (tape) {
 });
 
 tape('functions', function (tape) {
-  tape.plan(8);
+  tape.plan(9);
 
   tape.strictEqual(
     transform('function fn(s: string) { return s; } // comment'),
@@ -133,6 +163,12 @@ tape('functions', function (tape) {
     transform('function map(fn: (x: T) => U) {}'),
     'function map(fn: (x: T) => U) {f.check(arguments, f.args([f.fun]));}',
     'should convert a generic function in f.fun'
+  );
+
+  tape.strictEqual(
+    transform('function foo<T>(x: T) { return x; }'),
+    'function foo<T>(x: T) {f.check(arguments, f.args([f.any])); return x; }',
+    'should handle polymorphic functions'
   );
 
 });
