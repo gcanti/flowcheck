@@ -34,42 +34,42 @@
     return this.validate(x, null, true).ok;
   };
 
-  function irreducible(name, is) {
+  function define(name, is) {
     var type = new Type(name, function (x, ctx) {
       return is(x) ? null : [new Failure(x, type, ctx)];
     }, is);
     return type;
   }
 
-  var Any = irreducible('any', function () {
+  var Any = define('any', function () {
     return true;
   });
 
-  var Mixed = irreducible('mixed', function () {
+  var Mixed = define('mixed', function () {
     return true;
   });
 
-  var Void = irreducible('void', function (x) {
+  var Void = define('void', function (x) {
     return x === void 0;
   });
 
-  var Str = irreducible('string', function (x) {
+  var Str = define('string', function (x) {
     return typeof x === 'string';
   });
 
-  var Num = irreducible('number', function (x) {
+  var Num = define('number', function (x) {
     return typeof x === 'number' && isFinite(x) && !isNaN(x);
   });
 
-  var Bool = irreducible('boolean', function (x) {
+  var Bool = define('boolean', function (x) {
     return x === true || x === false;
   });
 
-  var Arr = irreducible('array', function (x) {
+  var Arr = define('array', function (x) {
     return x instanceof Array;
   });
 
-  var Obj = irreducible('object', function (x) {
+  var Obj = define('object', function (x) {
     return x != null && typeof x === 'object' && !Arr.is(x);
   });
 
@@ -236,7 +236,8 @@
   }
 
   var exports = {
-    irreducible: irreducible,
+    Type: Type,
+    define: define,
     any: Any,
     mixed: Mixed,
     'void': Void,
