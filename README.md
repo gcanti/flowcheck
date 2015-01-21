@@ -37,6 +37,10 @@ The transformer adds assertions for each type annotation.
 
 The assertion module checks the types at runtime. If an assert fails **the debugger kicks in** so you can inspect the stack and quickly find out what's wrong.
 
+# Plugins
+
+There is [flowcheck-loader](https://github.com/gaearon/flowcheck-loader) for Webpack which is equivalent to Flowcheck's Browserify transform.
+
 # Tests
 
 ```js
