@@ -1,6 +1,6 @@
 {
   "name": "flowcheck",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Runtime type checking for Flow and TypeScript",
   "main": "index.js",
   "scripts": {
@@ -32,5 +32,13 @@
     "tap-spec": "^2.1.1",
     "tape": "^3.0.3",
     "testling": "^1.7.1"
-  }
+  },
+  "keywords": [
+    "Flow",
+    "TypeScript",
+    "AtScript",
+    "flowtype",
+    "runtime",
+    "checking"
+  ]
 }

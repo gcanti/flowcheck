@@ -1,6 +1,42 @@
 var tape = require('tape');
 var f = require('../assert');
 
+tape('number', function (tape) {
+
+  tape.plan(5);
+
+  tape.strictEqual(
+    f.number.is('a'),
+    false,
+    'is() should return false if x is not a number'
+  );
+
+  tape.strictEqual(
+    f.number.validate('a') + '',
+    'Expected an instance of number got "a", (no context)',
+    'validate() should fail if x is not a number'
+  );
+
+  tape.strictEqual(
+    f.number.validate(1),
+    null,
+    'validate() should succeed if x is a number'
+  );
+
+  tape.strictEqual(
+    f.number.validate(NaN),
+    null,
+    'validate() should succeed if x is a NaN'
+  );
+
+  tape.strictEqual(
+    f.number.validate(Infinity),
+    null,
+    'validate() should succeed if x is Infinity'
+  );
+
+});
+
 tape('list()', function (tape) {
 
   tape.plan(5);
@@ -33,6 +69,24 @@ tape('list()', function (tape) {
     f.list(f.number).validate([1, 2]),
     null,
     'should succeed if x is a list of T'
+  );
+
+});
+
+tape('optional()', function (tape) {
+
+  tape.plan(2);
+
+  tape.strictEqual(
+    f.optional(f.number).validate('s') + '',
+    'Expected an instance of number got "s", context: number?',
+    'should fail if x is not an instance of T'
+  );
+
+  tape.strictEqual(
+    f.optional(f.number).validate(undefined),
+    null,
+    'should succeed if x is undefined'
   );
 
 });
@@ -165,48 +219,48 @@ tape('dict()', function (tape) {
 
 });
 
-tape('object()', function (tape) {
+tape('shape()', function (tape) {
 
   tape.plan(7);
 
   tape.strictEqual(
-    f.object({a: f.number, b: f.string}).name,
+    f.shape({a: f.number, b: f.string}).name,
     '{a: number; b: string;}',
     'should set a default name'
   );
 
   tape.strictEqual(
-    f.object({a: f.number, b: f.string}, 'MyObject').name,
+    f.shape({a: f.number, b: f.string}, 'MyObject').name,
     'MyObject',
     'should set a specified name'
   );
 
   tape.strictEqual(
-    f.object({a: f.number, b: f.string}).validate(1) + '',
+    f.shape({a: f.number, b: f.string}).validate(1) + '',
     'Expected an instance of object got 1, context: {a: number; b: string;}',
     'should fail if x is not an object'
   );
 
   tape.strictEqual(
-    f.object({a: f.number, b: f.string}).validate({a: 1, b: 2}) + '',
+    f.shape({a: f.number, b: f.string}).validate({a: 1, b: 2}) + '',
     'Expected an instance of string got 2, context: {a: number; b: string;} / b',
     'should fail if a key k of x is not an instance of T[k]'
   );
 
   tape.strictEqual(
-    f.object({a: f.maybe(f.number)}).validate({}) + '',
+    f.shape({a: f.maybe(f.number)}).validate({}) + '',
     'Expected an instance of number got undefined, context: {a: ?number;} / a / ?number',
     'should fail if a key is not specified'
   );
 
   tape.strictEqual(
-    f.object({a: f.number, b: f.string}).validate({a: 1, b: 's'}),
+    f.shape({a: f.number, b: f.string}).validate({a: 1, b: 's'}),
     null,
     'should succeed if x is an instance of T'
   );
 
   tape.strictEqual(
-    f.object({a: f.number}).validate({a: 1, b: 's'}),
+    f.shape({a: f.number}).validate({a: 1, b: 's'}),
     null,
     'should succeed if x owns an additional property'
   );
@@ -243,18 +297,18 @@ tape('union()', function (tape) {
 
 });
 
-tape('args()', function (tape) {
+tape('arguments()', function (tape) {
 
   tape.plan(6);
 
   tape.strictEqual(
-    f.args([f.number, f.string]).name,
+    f.arguments([f.number, f.string]).name,
     '(number, string, ...any)',
     'should set a proper name when varargs is not specified'
   );
 
   tape.strictEqual(
-    f.args([f.number, f.string], f.boolean).name,
+    f.arguments([f.number, f.string], f.boolean).name,
     '(number, string, ...boolean)',
     'should set a proper name when varargs is specified'
   );
@@ -264,12 +318,12 @@ tape('args()', function (tape) {
     tape.plan(2);
 
     tape.strictEqual(
-      f.args([f.string, f.number]).validate([]) + '',
+      f.arguments([f.string, f.number]).validate([]) + '',
       'Expected an instance of [string, number] got [], context: arguments'
     );
 
     tape.strictEqual(
-      f.args([f.string, f.number]).validate([1]) + '',
+      f.arguments([f.string, f.number]).validate([1]) + '',
       'Expected an instance of [string, number] got [1], context: arguments'
     );
 
@@ -280,25 +334,25 @@ tape('args()', function (tape) {
     tape.plan(2);
 
     tape.strictEqual(
-      f.args([f.string, f.number]).validate(['s', 1]),
+      f.arguments([f.string, f.number]).validate(['s', 1]),
       null
     );
 
     tape.strictEqual(
-      f.args([f.string, f.number]).validate(['s', 1, 2]),
+      f.arguments([f.string, f.number]).validate(['s', 1, 2]),
       null
     );
 
   });
 
   tape.strictEqual(
-    f.args([], f.string).validate([1]) + '',
+    f.arguments([], f.string).validate([1]) + '',
     'Expected an instance of string got 1, context: varargs / Array<string> / 0',
     'should fail if x is not an instance of the varargs list'
   );
 
   tape.strictEqual(
-    f.args([], f.string).validate(['a', 'b']),
+    f.arguments([], f.string).validate(['a', 'b']),
     null,
     'should succeed if x is an instance of the varargs list'
   );

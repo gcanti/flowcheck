@@ -9,7 +9,7 @@ function contains(tape, bundle, code) {
   tape.ok(bundle.indexOf(code) > -1, 'bundle should contain: ' + code);
 }
 
-tape('flowcheck', function (tape) {
+tape('browserify', function (tape) {
   tape.plan(2);
 
   tape.test('should transform a file with reactify', function (tape) {

@@ -1,4 +1,5 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/Users/giulio/Documents/Projects/github/flowcheck/assert.js":[function(require,module,exports){
+/* @flow */
 (function (root, factory) {
   'use strict';
   if (typeof define === 'function' && define.amd) {
@@ -32,7 +33,7 @@
   }
 
   Type.prototype.is = function (x) {
-    return this.validate(x, null, true).ok;
+    return this.validate(x, null, true) === null;
   };
 
   function define(name, is) {
@@ -59,7 +60,7 @@
   });
 
   var Num = define('number', function (x) {
-    return typeof x === 'number' && isFinite(x) && !isNaN(x);
+    return typeof x === 'number';
   });
 
   var Bool = define('boolean', function (x) {
@@ -74,7 +75,7 @@
     return x != null && typeof x === 'object' && !Arr.is(x);
   });
 
-  var Fun = define('fun', function (x) {
+  var Func = define('function', function (x) {
     return typeof x === 'function';
   });
 
@@ -100,6 +101,16 @@
         }
       }
       return errors;
+    });
+  }
+
+  function optional(type, name) {
+    name = name || type.name + '?';
+    return new Type(name, function (x, ctx, fast) {
+      if (x === void 0) { return null; }
+      ctx = ctx || [];
+      ctx.push(name);
+      return validate(x, type, ctx, fast);
     });
   }
 
@@ -169,7 +180,7 @@
     });
   }
 
-  function object(props, name) {
+  function shape(props, name) {
     name = name || '{' + Object.keys(props).map(function (k) { return k + ': ' + props[k].name + ';'; }).join(' ') + '}';
     return new Type(name, function (x, ctx, fast) {
       ctx = ctx || [];
@@ -251,14 +262,16 @@
     number: Num,
     string: Str,
     'boolean': Bool,
-    fun: Fun,
+    object: Obj,
+    'function': Func,
     list: list,
+    optional: optional,
     maybe: maybe,
     tuple: tuple,
     dict: dict,
-    object: object,
+    shape: shape,
     union: union,
-    args: args,
+    arguments: args,
     check: check
   };
 
@@ -23835,109 +23848,141 @@ function debug(x) {
   console.log(JSON.stringify(x, null, 2));
 }
 
-function getOption(name, state) {
-  return state.g.opts[name];
+function getName(x) {
+  return x.name;
 }
 
-function getProperty(name, ns) {
-  return name in {'void': 1, 'boolean': 1} ? // compatibility with ES3
-    ns + '["' + name + '"]' :
-    ns + '.' + name;
+function toLookup(arr) {
+  var lookup = {};
+  for (var i = 0, len = arr.length ; i < len ; i++ ) {
+    lookup[arr[i]] = true;
+  }
+  return lookup;
 }
 
-function getType(ann, ns) {
+function Context(state, blacklist) {
+  this.state = state;
+  this.blacklist = blacklist;
+  this.namespace = state.g.opts.namespace;
+  this.target = state.g.opts.target;
+}
+
+Context.prototype.getProperty = function(name) {
+  return this.target === 'es3' && name in {'void': 1, 'boolean': 1} ? // compatibility with ES3
+    this.namespace + '["' + name + '"]' :
+    this.namespace + '.' + name;
+};
+
+Context.prototype.getNodeText = function(node) {
+  return utils.getNodeSourceText(node, this.state) +
+  ', line: ' + node.loc.start.line +
+  ', column: ' + node.loc.start.column;
+};
+
+Context.prototype.getType = function(ann) {
   if (ann) {
     switch (ann.type) {
-
       case Syntax.StringTypeAnnotation :
-        return getProperty('string', ns);
+        return this.getProperty('string');
       case Syntax.NumberTypeAnnotation :
-        return getProperty('number', ns);
+        return this.getProperty('number');
       case Syntax.BooleanTypeAnnotation :
-        return getProperty('boolean', ns);
+        return this.getProperty('boolean');
       case Syntax.AnyTypeAnnotation :
-        return getProperty('any', ns);
+        return this.getProperty('any');
       case Syntax.VoidTypeAnnotation :
-        return getProperty('void', ns);
+        return this.getProperty('void');
 
       case Syntax.NullableTypeAnnotation :
-        // handle ?T
-        return getProperty('maybe', ns) + '(' + getType(ann.typeAnnotation, ns) + ')';
+        // handle `?T`
+        return this.getProperty('maybe') + '(' + this.getType(ann.typeAnnotation) + ')';
 
       case Syntax.ArrayTypeAnnotation :
-        // handle T[]
-        return getProperty('list', ns) + '(' + getType(ann.elementType, ns) + ')';
+        // handle `T[]`
+        return this.getProperty('list') + '(' + this.getType(ann.elementType) + ')';
 
       case Syntax.GenericTypeAnnotation :
         if (ann.id.type === Syntax.Identifier) {
           var name = ann.id.name;
-          // handle mixed type
+          // handle `mixed` type
           if (name === 'mixed') {
-            return getProperty('mixed', ns);
+            return this.getProperty('mixed');
           }
-          // handle Array, Array<T>
+          // handle `Object` type
+          if (name === 'Object') {
+            return this.getProperty('object');
+          }
+          // handle `Function` type
+          if (name === 'Function') {
+            return this.getProperty('function');
+          }
           if (name === 'Array') {
-            var typeParameters = ann.typeParameters ? ann.typeParameters.params : [];
-            return getProperty('list', ns) + '(' + getType(typeParameters[0], ns) + ')';
+            // handle `Array`
+            if (!ann.typeParameters) {
+              return this.getProperty('list') + '(' + this.getProperty('any') + ')';
+            }
+            // handle `Array<T>`
+            var atp = ann.typeParameters.params;
+            if (atp.length !== 1) {
+              throw new Error('invalid Array declaration ' + this.getNodeText(ann) + ' expected only one type parameter');
+            }
+            return this.getProperty('list') + '(' + this.getType(atp[0]) + ')';
           }
-          // fallback e.g: `var a: Person` or `T<U>`
-          return name;
+          // handle generics e.g. `function foo<T>(x: T) { return x; }`
+          // must print `f.arguments([f.any])` not `f.arguments([T])`
+          if (!this.blacklist || !this.blacklist.hasOwnProperty(name)) {
+            return name;
+          }
         }
+        break;
 
       case Syntax.TupleTypeAnnotation :
-        // handle [T1, T2, ... , Tn]
-        return getProperty('tuple', ns) + '([' + ann.types.map(function (type) {
-          return getType(type, ns);
-        }).join(', ') + '])';
+        // handle `[T1, T2, ... , Tn]`
+        return this.getProperty('tuple') + '([' + ann.types.map(function (type) {
+          return this.getType(type);
+        }.bind(this)).join(', ') + '])';
 
       case Syntax.ObjectTypeAnnotation :
         if (ann.properties.length) {
-          // handle {p1: T1; p2: T2; ... pn: Tn;}
-          return getProperty('object', ns) + '({' + ann.properties.map(function (prop) {
-            return prop.key.name + ': ' + getType(prop.value, ns);
-          }).join(', ') + '})';
-        } else if (ann.indexers.length === 1) {
-          // handle {[key: D]: C}
-          var domain = getType(ann.indexers[0].key, ns);
-          var codomain = getType(ann.indexers[0].value, ns);
-          return getProperty('dict', ns) + '(' + domain + ', ' + codomain + ')';
+          // handle `{p1: T1; p2: T2; ... pn: Tn;}`
+          return this.getProperty('shape') + '({' + ann.properties.map(function (prop) {
+            return prop.key.name + ': ' + this.getType(prop.value);
+          }.bind(this)).join(', ') + '})';
         }
+        // handle `{[key: D]: C}`
+        var domain = this.getType(ann.indexers[0].key);
+        var codomain = this.getType(ann.indexers[0].value);
+        return this.getProperty('dict') + '(' + domain + ', ' + codomain + ')';
 
       case Syntax.UnionTypeAnnotation :
-        // handle T1 | T2 | ... | Tn
-        return getProperty('union', ns) + '([' + ann.types.map(function (type) {
-          return getType(type, ns);
-        }).join(', ') + '])';
+        // handle `T1 | T2 | ... | Tn`
+        return this.getProperty('union') + '([' + ann.types.map(function (type) {
+          return this.getType(type);
+        }.bind(this)).join(', ') + '])';
 
       case Syntax.FunctionTypeAnnotation :
-        // handle (x: T) => U
-        return getProperty('fun', ns);
-
-      default :
-        debug(ann);
+        // handle `(x: T) => U`
+        return this.getProperty('function');
 
     }
   }
-  return getProperty('any', ns);
-}
+  // fallback
+  return this.getProperty('any');
+};
 
 //
-// variable declarations
+// visitors
 //
 
 function visitTypedVariableDeclarator(traverse, node, path, state) {
-
-  var ns = getOption('namespace', state);
-  var ann = node.id.typeAnnotation;
-
+  var ctx = new Context(state);
   if (node.init) {
     utils.catchup(node.init.range[0], state);
-    utils.append(getProperty('check', ns) + '(', state);
+    utils.append(ctx.getProperty('check') + '(', state);
     traverse(node.init, path, state);
     utils.catchup(node.init.range[1], state);
-    utils.append(', ' + getType(ann.typeAnnotation, ns) + ')', state);
+    utils.append(', ' + ctx.getType(node.id.typeAnnotation.typeAnnotation) + ')', state);
   }
-
   utils.catchup(node.range[1], state);
   return false;
 }
@@ -23946,32 +23991,29 @@ visitTypedVariableDeclarator.test = function(node, path, state) {
     node.id.typeAnnotation;
 };
 
-//
-// functions
-//
-
 function visitTypedFunction(traverse, node, path, state) {
-
-  var ns = getOption('namespace', state);
+  var blacklist = node.typeParameters ? toLookup(node.typeParameters.params.map(getName)) : null;
+  var ctx = new Context(state, blacklist);
+  var rest = node.rest ? ', ' + ctx.getType(node.rest.typeAnnotation.typeAnnotation) : '';
   var types = [];
   var params = [];
-  var rest = node.rest ? ', ' + getType(node.rest.typeAnnotation.typeAnnotation, ns) : '';
   node.params.forEach(function (param) {
-    types.push(getType(param.typeAnnotation ? param.typeAnnotation.typeAnnotation : null, ns));
+    var type = ctx.getType(param.typeAnnotation ? param.typeAnnotation.typeAnnotation : null);
+    types.push(param.optional ? ctx.getProperty('optional') + '(' + type + ')' : type);
     params.push(param.name);
   });
 
   utils.catchup(node.body.range[0] + 1, state);
 
   if (params.length || rest) {
-    utils.append(ns + '.check(arguments, ' + ns + '.args([' + types.join(', ') + ']' + rest + '));', state);
+    utils.append(ctx.getProperty('check') + '(arguments, ' + ctx.getProperty('arguments') + '([' + types.join(', ') + ']' + rest + '));', state);
   }
 
   if (node.returnType) {
-    var returnType = getType(node.returnType.typeAnnotation, ns);
+    var returnType = ctx.getType(node.returnType.typeAnnotation);
     utils.append(' var ret = (function (' + params.join(', ') + ') {', state);
     utils.catchup(node.body.range[1], state);
-    utils.append(').apply(this, arguments); return ' + ns + '.check(ret, ' + returnType + ');}', state);
+    utils.append(').apply(this, arguments); return ' + ctx.getProperty('check') + '(ret, ' + returnType + ');}', state);
   }
 
   utils.catchup(node.range[1], state);
@@ -23986,16 +24028,10 @@ visitTypedFunction.test = function(node, path, state) {
   );
 };
 
-//
-// type aliases
-//
-
 function visitTypeAlias(traverse, node, path, state) {
-  var ns = getOption('namespace', state);
-  var name = node.id.name;
-  var type = getType(node.right, ns);
+  var ctx = new Context(state);
   utils.catchup(node.range[1], state);
-  utils.append('var ' + name + ' = ' + type + ';', state);
+  utils.append('var ' + node.id.name + ' = ' + ctx.getType(node.right) + ';', state);
   return false;
 }
 visitTypeAlias.test = function (node, path, state) {

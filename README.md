@@ -19,24 +19,27 @@ If an assert fails the debugger kicks in so you can inspect the stack and quickl
 3. enable Flowcheck.js and strip type annotations (with react-tools or 6to5) during development
 4. disable Flowcheck.js in production for zero overhead
 
-# Roadmap
+# Differences with flow
+
+- Flowcheck tuples are fixed-length arrays [#227](https://github.com/facebook/flow/issues/227)
+
+# TODO
 
 - core
-  - handle `Object`, `Function` type annotations
-  - tuples must have at most 8 elements
-  - handle typed class members (e.g `class C { x: string; }`)
-  - handle intersection types
-  - handle declarations
-  - add some (opt-in) extra features derived from [tcomb](https://github.com/gcanti/tcomb) (notably subtypes)
-  - automatic import of flowcheck/assert module
-  - tests, tests and tests
-  - even more tests
-- polymorphic
-  - handle polymorphic functions (e.g. `function foo<X>(x: X): X { return x; }`)
-  - handle polymorphic classes (e.g. `class C<X> { x: X; }`)
+  - [x] handle `Object`, `Function` type annotations
+  - [ ] handle typed class members (e.g `class C { x: string; }`)
+  - [ ] handle intersection types
+  - [ ] handle declarations
+  - [ ] automatic import of flowcheck/assert module
+- polymorphism
+  - [x] handle polymorphic functions
+  - [ ] handle polymorphic classes (e.g. `class C<X> { x: X; }`)
+  - [ ] add some (opt-in) extra features derived from [tcomb](https://github.com/gcanti/tcomb)
+  - [ ] subtypes
+  - [ ] enums
 - tooling
-  - gulp plugin
-  - require hook (?)
+  - [ ] gulp plugin
+  - [ ] require hook
 
 # Modules
 

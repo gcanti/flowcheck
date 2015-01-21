@@ -1,3 +1,4 @@
+/* @flow */
 (function (root, factory) {
   'use strict';
   if (typeof define === 'function' && define.amd) {
@@ -31,7 +32,7 @@
   }
 
   Type.prototype.is = function (x) {
-    return this.validate(x, null, true).ok;
+    return this.validate(x, null, true) === null;
   };
 
   function define(name, is) {
@@ -58,7 +59,7 @@
   });
 
   var Num = define('number', function (x) {
-    return typeof x === 'number' && isFinite(x) && !isNaN(x);
+    return typeof x === 'number';
   });
 
   var Bool = define('boolean', function (x) {
@@ -73,7 +74,7 @@
     return x != null && typeof x === 'object' && !Arr.is(x);
   });
 
-  var Fun = define('fun', function (x) {
+  var Func = define('function', function (x) {
     return typeof x === 'function';
   });
 
@@ -99,6 +100,16 @@
         }
       }
       return errors;
+    });
+  }
+
+  function optional(type, name) {
+    name = name || type.name + '?';
+    return new Type(name, function (x, ctx, fast) {
+      if (x === void 0) { return null; }
+      ctx = ctx || [];
+      ctx.push(name);
+      return validate(x, type, ctx, fast);
     });
   }
 
@@ -168,7 +179,7 @@
     });
   }
 
-  function object(props, name) {
+  function shape(props, name) {
     name = name || '{' + Object.keys(props).map(function (k) { return k + ': ' + props[k].name + ';'; }).join(' ') + '}';
     return new Type(name, function (x, ctx, fast) {
       ctx = ctx || [];
@@ -250,14 +261,16 @@
     number: Num,
     string: Str,
     'boolean': Bool,
-    fun: Fun,
+    object: Obj,
+    'function': Func,
     list: list,
+    optional: optional,
     maybe: maybe,
     tuple: tuple,
     dict: dict,
-    object: object,
+    shape: shape,
     union: union,
-    args: args,
+    arguments: args,
     check: check
   };
 
