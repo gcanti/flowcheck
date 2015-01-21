@@ -17,6 +17,15 @@ function getName(x) {
   return x.name;
 }
 
+function getObjectKey(key) {
+  switch (key.type) {
+    case Syntax.Identifier :
+      return key.name;
+    case Syntax.Literal :
+      return JSON.stringify(key.value);
+  }
+}
+
 function toLookup(arr) {
   var lookup = {};
   for (var i = 0, len = arr.length ; i < len ; i++ ) {
@@ -111,7 +120,7 @@ Context.prototype.getType = function(ann) {
         if (ann.properties.length) {
           // handle `{p1: T1; p2: T2; ... pn: Tn;}`
           return this.getProperty('shape') + '({' + ann.properties.map(function (prop) {
-            return prop.key.name + ': ' + this.getType(prop.value);
+            return getObjectKey(prop.key) + ': ' + this.getType(prop.value);
           }.bind(this)).join(', ') + '})';
         }
         // handle `{[key: D]: C}`

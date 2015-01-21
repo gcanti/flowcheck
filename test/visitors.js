@@ -97,24 +97,30 @@ tape('optional types', function (tape) {
 
 });
 
-tape('objects as maps', function (tape) {
+tape('dictionaries', function (tape) {
   tape.plan(1);
 
   tape.strictEqual(
     transform('var x: {[key: string]: number} = {a: 1, b: 2};'),
     'var x: {[key: string]: number} = f.check({a: 1, b: 2}, f.dict(f.string, f.number));',
-    'object (dict)'
+    'should handle dictionaries'
   );
 
 });
 
-tape('objects as shape', function (tape) {
-  tape.plan(1);
+tape('shapes', function (tape) {
+  tape.plan(2);
 
   tape.strictEqual(
     transform('var x: {a: string; b: number;} = {};'),
     'var x: {a: string; b: number;} = f.check({}, f.shape({a: f.string, b: f.number}));',
-    'object (shape)'
+    'should handle shapes'
+  );
+
+  tape.strictEqual(
+    transform('type MyType = {"foo-bar": number;};'),
+    'type MyType = {"foo-bar": number;};var MyType = f.shape({"foo-bar": f.number});',
+    'should escape literal keys'
   );
 
 });
