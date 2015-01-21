@@ -222,3 +222,15 @@ tape('type alias', function (tape) {
   );
 
 });
+
+tape('classes', function (tape) {
+  tape.plan(1);
+
+  tape.strictEqual(
+    transform('class C<X> { foo(x: X): X { this.x = x; } }'),
+    'class C<X> { foo(x: X): X {f.check(arguments, f.arguments([f.any])); var ret = (function (x) { this.x = x; }).apply(this, arguments); return f.check(ret, f.any);} }',
+    'should handle polymorphic classes'
+  );
+
+});
+
