@@ -23844,12 +23844,35 @@ var Syntax = jstransform.Syntax;
 // utils
 //
 
-function debug(x) {
-  console.log(JSON.stringify(x, null, 2));
-}
-
 function getName(x) {
   return x.name;
+}
+
+function getObjectKey(key) {
+  switch (key.type) {
+    case Syntax.Identifier :
+      return key.name;
+    case Syntax.Literal :
+      return JSON.stringify(key.value);
+  }
+}
+
+function getParentClassDeclaration(path) {
+  for (var i = 0, len = path.length ; i < len ; i++ ) {
+    if (path[i].type === Syntax.ClassDeclaration) {
+      return path[i];
+    }
+  }
+  return null;
+}
+
+function mixin(a, b) {
+  for (var k in b) {
+    if (b.hasOwnProperty(k)) {
+      a[k] = b[k];
+    }
+  }
+  return a;
 }
 
 function toLookup(arr) {
@@ -23860,9 +23883,13 @@ function toLookup(arr) {
   return lookup;
 }
 
-function Context(state, blacklist) {
+//
+// Context
+//
+
+function Context(state, generics) {
   this.state = state;
-  this.blacklist = blacklist;
+  this.generics = generics;
   this.namespace = state.g.opts.namespace;
   this.target = state.g.opts.target;
 }
@@ -23930,7 +23957,7 @@ Context.prototype.getType = function(ann) {
           }
           // handle generics e.g. `function foo<T>(x: T) { return x; }`
           // must print `f.arguments([f.any])` not `f.arguments([T])`
-          if (!this.blacklist || !this.blacklist.hasOwnProperty(name)) {
+          if (!this.generics || !this.generics.hasOwnProperty(name)) {
             return name;
           }
         }
@@ -23946,7 +23973,7 @@ Context.prototype.getType = function(ann) {
         if (ann.properties.length) {
           // handle `{p1: T1; p2: T2; ... pn: Tn;}`
           return this.getProperty('shape') + '({' + ann.properties.map(function (prop) {
-            return prop.key.name + ': ' + this.getType(prop.value);
+            return getObjectKey(prop.key) + ': ' + this.getType(prop.value);
           }.bind(this)).join(', ') + '})';
         }
         // handle `{[key: D]: C}`
@@ -23971,7 +23998,7 @@ Context.prototype.getType = function(ann) {
 };
 
 //
-// visitors
+// handle variable declarations
 //
 
 function visitTypedVariableDeclarator(traverse, node, path, state) {
@@ -23991,9 +24018,18 @@ visitTypedVariableDeclarator.test = function(node, path, state) {
     node.id.typeAnnotation;
 };
 
+//
+// handle typed functions
+// a typed function is a function such that at least one param or the return value is typed
+//
+
 function visitTypedFunction(traverse, node, path, state) {
-  var blacklist = node.typeParameters ? toLookup(node.typeParameters.params.map(getName)) : null;
-  var ctx = new Context(state, blacklist);
+  var klass = getParentClassDeclaration(path);
+  var generics = klass && klass.typeParameters ? toLookup(klass.typeParameters.params.map(getName)) : {};
+  if (node.typeParameters) {
+    generics = mixin(generics, toLookup(node.typeParameters.params.map(getName)));
+  }
+  var ctx = new Context(state, generics);
   var rest = node.rest ? ', ' + ctx.getType(node.rest.typeAnnotation.typeAnnotation) : '';
   var types = [];
   var params = [];
@@ -24027,6 +24063,10 @@ visitTypedFunction.test = function(node, path, state) {
     node.params.some(function (param) { return !!param.typeAnnotation; })
   );
 };
+
+//
+// handle type aliases
+//
 
 function visitTypeAlias(traverse, node, path, state) {
   var ctx = new Context(state);

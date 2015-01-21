@@ -1,7 +1,7 @@
 {
   "name": "flowcheck",
   "version": "0.2.0",
-  "description": "Runtime type checking for Flow and TypeScript",
+  "description": "Runtime type checking for Flow",
   "main": "index.js",
   "scripts": {
     "test": "browserify test | testling -u",
@@ -35,9 +35,9 @@
   },
   "keywords": [
     "Flow",
+    "Flowtype",
     "TypeScript",
     "AtScript",
-    "flowtype",
     "runtime",
     "checking"
   ]

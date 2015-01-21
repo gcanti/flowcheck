@@ -102,12 +102,12 @@
       </div>
       <div class="row">
         <div class="col-md-12">
-          <h2 class="text-center">Examples</h2>
+          <h2 class="text-center">Example</h2>
         </div>
       </div>
       <div class="row">
         <div class="col-md-6">
-          <p class="lead text-center">Source</p>
+          <p class="lead text-center">Input</p>
 <pre><code>
 // basic types
 var n: number = 1;
@@ -159,6 +159,20 @@ class Person {
   }
 }
 </code></pre>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+          <h2 class="text-center">Quick setup</h2>
+<pre><code>
+npm install flowcheck
+browserify -t flowcheck -t [reactify --strip-types] input.js -o output.js
+</code></pre>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+
         </div>
       </div>
       <div class="row">

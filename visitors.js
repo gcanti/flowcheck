@@ -9,10 +9,6 @@ var Syntax = jstransform.Syntax;
 // utils
 //
 
-function debug(x) {
-  console.log(JSON.stringify(x, null, 2));
-}
-
 function getName(x) {
   return x.name;
 }
