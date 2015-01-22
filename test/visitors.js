@@ -1,6 +1,18 @@
 var tape = require('tape');
 var transform = require('../transform').transform;
 
+tape('namespace option', function (tape) {
+
+  tape.plan(1);
+
+  tape.strictEqual(
+    transform('var x: string = "a";', {namespace: 't'}),
+    'var x: string = t.check("a", t.string);',
+    'should handle namespace option'
+  );
+
+});
+
 tape('variables', function (tape) {
   tape.plan(8);
 
