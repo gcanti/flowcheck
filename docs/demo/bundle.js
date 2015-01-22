@@ -287,6 +287,7 @@ var CodeMirror = require('react-code-mirror');
 require('codemirror/mode/javascript/javascript');
 var transform = require('../../transform').transform;
 var beautify = require('js-beautify');
+//var to5 = require('6to5-core').transform;
 
 window.f = require('../../assert');
 window.React = React;
@@ -316,7 +317,12 @@ var App = React.createClass({displayName: "App",
           assertions: options.assertions
         });
       }
-      // jsx
+      // harmony
+      /*
+      code = to5(code, {
+        stripTypes: options.stripTypes
+      }).code;
+      */
       code = JSXTransformer.transform(code, {
         harmony: options.harmony,
         stripTypes: options.stripTypes
