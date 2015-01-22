@@ -61,7 +61,7 @@ function Context(state, generics) {
 
 Context.prototype.getProperty = function(name) {
   return this.target === 'es3' && name in {'void': 1, 'boolean': 1} ? // compatibility with ES3
-    this.namespace + '["' + name + '"]' :
+    this.namespace + '[' + JSON.stringify(name) + ']' :
     this.namespace + '.' + name;
 };
 

@@ -2,7 +2,7 @@ var tape = require('tape');
 var transform = require('../transform').transform;
 
 tape('variables', function (tape) {
-  tape.plan(7);
+  tape.plan(8);
 
   tape.strictEqual(
     transform('var x: string = "a";'),
@@ -20,6 +20,12 @@ tape('variables', function (tape) {
     transform('var x: boolean = true;'),
     'var x: boolean = f.check(true, f.boolean);',
     'boolean type'
+  );
+
+  tape.strictEqual(
+    transform('var x: boolean = true;', {target: 'es3'}),
+    'var x: boolean = f.check(true, f["boolean"]);',
+    'should handle target es3'
   );
 
   tape.strictEqual(
