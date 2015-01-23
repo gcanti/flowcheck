@@ -1,5 +1,4 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/Users/giulio/Documents/Projects/github/flowcheck/assert.js":[function(require,module,exports){
-/* @flow */
 (function (root, factory) {
   'use strict';
   if (typeof define === 'function' && define.amd) {
@@ -23790,10 +23789,10 @@ var Buffer = require('buffer').Buffer;
 
 function getOptions(options) {
   options = options || {};
-  options.assertions =  typeof options.assertions === 'undefined' ? true : options.assertions;
-  options.module =      options['module'] || options.module || 'flowtype/assert';
-  options.namespace =   options.namespace || 'f';
+  options.namespace =   options.namespace || '_f';
   options.sourceMap =   options['source-map'] || options.sourceMap;
+  options.module =      options['module'] || options.module || 'flowcheck/assert';
+  options.skipImport =  options['skip-import'] || options.skipImport;
   return options;
 }
 
@@ -23898,11 +23897,13 @@ function Context(state, generics) {
   this.generics = generics;
   this.namespace = state.g.opts.namespace;
   this.target = state.g.opts.target;
+  this.module = state.g.opts.module;
+  this.skipImport = state.g.opts.skipImport;
 }
 
 Context.prototype.getProperty = function(name) {
   return this.target === 'es3' && name in {'void': 1, 'boolean': 1} ? // compatibility with ES3
-    this.namespace + '["' + name + '"]' :
+    this.namespace + '[' + JSON.stringify(name) + ']' :
     this.namespace + '.' + name;
 };
 
@@ -24084,8 +24085,22 @@ visitTypeAlias.test = function (node, path, state) {
   return node.type === Syntax.TypeAlias;
 };
 
+function visitProgram(traverse, node, path, state) {
+  var ctx = new Context(state);
+  var namespace = ctx.namespace;
+  // FIXME remove 2nd condition when flowcheck-loader will not use the namespace option
+  if (!ctx.skipImport && namespace.indexOf('require') === -1) {
+    utils.append('var ' + namespace + ' = require(' + JSON.stringify(ctx.module) + ');\n\n', state);
+  }
+  return true;
+}
+visitProgram.test = function (node, path, state) {
+  return node.type === Syntax.Program;
+};
+
 module.exports = {
   visitorList: [
+    visitProgram,
     visitTypedFunction,
     visitTypedVariableDeclarator,
     visitTypeAlias

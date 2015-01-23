@@ -15,24 +15,24 @@ tape('browserify', function (tape) {
   tape.test('should transform a file with reactify', function (tape) {
     tape.plan(2);
     browserify('./fixtures/main.js', {basedir: __dirname})
-    .transform(flowcheck)
+    .transform(flowcheck, {skipImport: true})
     .transform(reactify, {
       stripTypes: true
     })
     .bundle(function(err, result) {
       tape.ok(!err, 'should not fail');
-      contains(tape, result, 'var x         = f.check(1, f.string);');
+      contains(tape, result, 'var x         = _f.check(1, _f.string);');
     });
   });
 
   tape.test('should transform a file with 6to5', function (tape) {
     tape.plan(2);
     browserify('./fixtures/main.js', {basedir: __dirname})
-    .transform(flowcheck)
+    .transform(flowcheck, {skipImport: true})
     .transform(to5ify)
     .bundle(function(err, result) {
       tape.ok(!err, 'should not fail');
-      contains(tape, result, 'var x = f.check(1, f.string);');
+      contains(tape, result, 'var x = _f.check(1, _f.string);');
     });
   });
 

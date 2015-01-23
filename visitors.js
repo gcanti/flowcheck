@@ -57,6 +57,8 @@ function Context(state, generics) {
   this.generics = generics;
   this.namespace = state.g.opts.namespace;
   this.target = state.g.opts.target;
+  this.module = state.g.opts.module;
+  this.skipImport = state.g.opts.skipImport;
 }
 
 Context.prototype.getProperty = function(name) {
@@ -243,8 +245,22 @@ visitTypeAlias.test = function (node, path, state) {
   return node.type === Syntax.TypeAlias;
 };
 
+function visitProgram(traverse, node, path, state) {
+  var ctx = new Context(state);
+  var namespace = ctx.namespace;
+  // FIXME remove 2nd condition when flowcheck-loader will not use the namespace option
+  if (!ctx.skipImport && namespace.indexOf('require') === -1) {
+    utils.append('var ' + namespace + ' = require(' + JSON.stringify(ctx.module) + ');\n\n', state);
+  }
+  return true;
+}
+visitProgram.test = function (node, path, state) {
+  return node.type === Syntax.Program;
+};
+
 module.exports = {
   visitorList: [
+    visitProgram,
     visitTypedFunction,
     visitTypedVariableDeclarator,
     visitTypeAlias

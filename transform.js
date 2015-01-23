@@ -7,10 +7,10 @@ var Buffer = require('buffer').Buffer;
 
 function getOptions(options) {
   options = options || {};
-  options.assertions =  typeof options.assertions === 'undefined' ? true : options.assertions;
-  options.module =      options['module'] || options.module || 'flowtype/assert';
-  options.namespace =   options.namespace || 'f';
+  options.namespace =   options.namespace || '_f';
   options.sourceMap =   options['source-map'] || options.sourceMap;
+  options.module =      options['module'] || options.module || 'flowcheck/assert';
+  options.skipImport =  options['skip-import'] || options.skipImport;
   return options;
 }
 

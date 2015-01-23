@@ -1,11 +1,10 @@
 {
   "name": "flowcheck",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Runtime type checking for Flow",
   "main": "index.js",
   "scripts": {
-    "test": "browserify test | testling -u",
-    "node-test": "node test | tap-spec",
+    "test": "node test | tap-spec",
     "demo": "watchify -t reactify docs/demo/index.jsx -o docs/demo/bundle.js -v -x react"
   },
   "repository": {
@@ -30,8 +29,7 @@
     "react-code-mirror": "^3.0.3",
     "reactify": "^0.17.1",
     "tap-spec": "^2.1.1",
-    "tape": "^3.0.3",
-    "testling": "^1.7.1"
+    "tape": "^3.0.3"
   },
   "keywords": [
     "Flow",
