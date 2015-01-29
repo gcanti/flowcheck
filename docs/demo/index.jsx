@@ -7,7 +7,7 @@ var transform = require('../../transform').transform;
 var beautify = require('js-beautify');
 //var to5 = require('6to5-core').transform;
 
-window.f = require('../../assert');
+window._f = require('../../assert');
 window.React = React;
 
 var defaultValue = document.getElementById('example').innerText;
@@ -32,7 +32,7 @@ var App = React.createClass({
       // flowcheck
       if (options.assertions) {
         code = transform(code, {
-          assertions: options.assertions
+          skipImport: options.skipImport
         });
       }
       // harmony
@@ -82,10 +82,13 @@ var App = React.createClass({
 
   run: function () {
     try {
-      eval(this.compile(this.state.value, {
+      var code = this.compile(this.state.value, {
+        assertions: true,
         harmony: true,
-        stripTypes: true
-      }));
+        stripTypes: true,
+        skipImport: true
+      });
+      eval(code);
     } catch (e) {
       console.error(e);
       this.setState({error: e.message});
@@ -140,7 +143,8 @@ var App = React.createClass({
             </label>
           </div>
           <div className="form-group">
-            <button className="btn btn-danger" onClick={this.run}>Run (output to the console)</button>
+            <button className="btn btn-danger" onClick={this.run}>Run</button>
+            <p>Output to the console, when an assert fails the debugger kicks in</p>
           </div>
           <div className="form-group">
             {alert}

@@ -222,8 +222,15 @@
     if (varargs) { varargs = list(varargs); }
     return new Type(name, function (x, ctx, fast) {
       ctx = ctx || [];
+      var args = x;
+      // test if args is an array-like structure
+      if (args.hasOwnProperty('length')) {
+        args = slice(args, 0, len);
+        // handle optional arguments filling the array with undefined values
+        if (args.length < len) { args.length = len; }
+      }
       var errors = null, suberrors;
-      suberrors = typesTuple.validate(slice(x, 0, len), ctx.concat('arguments'), fast);
+      suberrors = typesTuple.validate(args, ctx.concat('arguments'), fast);
       if (suberrors) {
         if (fast) { return suberrors; }
         errors = errors || [];

@@ -135,25 +135,27 @@ class Person {
         <div class="col-md-6">
           <p class="lead text-center">Output</p>
 <pre><code>
+var _f = require("flowcheck/assert");
+
 // basic types
-var n = f.check(1, f.number);
+var n = _f.check(1, _f.number);
 
 // lists
-var arr = f.check(['a', 'b'], f.list(f.string));
+var arr = _f.check(['a', 'b'], _f.list(_f.string));
 
 // functions
 function sum(a, b) {
-  f.check(arguments, f.args([f.number, f.number]));
+  f.check(arguments, _f.args([_f.number, _f.number]));
   return a + b;
 }
 
 // type alias
-var MyType = f.list(f.number);
+var MyType = _f.list(_f.number);
 
 // ES6 classes
 class Person {
   constructor(name, age) {
-    f.check(arguments, f.args([f.string, f.number]));
+    _f.check(arguments, _f.args([_f.string, _f.number]));
     this.name = name;
     this.age = age;
   }

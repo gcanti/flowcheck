@@ -315,23 +315,28 @@ tape('arguments()', function (tape) {
 
   tape.test('should fail if x is not an instance of the arguments tuple', function (tape) {
 
-    tape.plan(2);
+    tape.plan(3);
 
     tape.strictEqual(
-      f.arguments([f.string, f.number]).validate([]) + '',
-      'Expected an instance of [string, number] got [], context: arguments'
+      f.arguments([f.string, f.number]).validate(1) + '',
+      'Expected an instance of array got 1, context: arguments / [string, number]'
     );
 
     tape.strictEqual(
-      f.arguments([f.string, f.number]).validate([1]) + '',
-      'Expected an instance of [string, number] got [1], context: arguments'
+      f.arguments([f.string, f.number]).validate([]) + '',
+      'Expected an instance of string got undefined, context: arguments / [string, number] / 0,Expected an instance of number got undefined, context: arguments / [string, number] / 1'
+    );
+
+    tape.strictEqual(
+      f.arguments([f.string, f.number]).validate(['a']) + '',
+      'Expected an instance of number got undefined, context: arguments / [string, number] / 1'
     );
 
   });
 
   tape.test('should succeed if x is an instance of the arguments tuple', function (tape) {
 
-    tape.plan(2);
+    tape.plan(4);
 
     tape.strictEqual(
       f.arguments([f.string, f.number]).validate(['s', 1]),
@@ -340,6 +345,16 @@ tape('arguments()', function (tape) {
 
     tape.strictEqual(
       f.arguments([f.string, f.number]).validate(['s', 1, 2]),
+      null
+    );
+
+    tape.strictEqual(
+      f.arguments([f.optional(f.number)]).validate([undefined]),
+      null
+    );
+
+    tape.strictEqual(
+      f.arguments([f.optional(f.number)]).validate([]),
       null
     );
 
