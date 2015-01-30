@@ -224,8 +224,10 @@
     return new Type(name, function (x, ctx, fast) {
       ctx = ctx || [];
       var args = x;
+      // test if args is an array-like structure
       if (args.hasOwnProperty('length')) {
         args = slice(args, 0, len);
+        // handle optional arguments filling the array with undefined values
         if (args.length < len) { args.length = len; }
       }
       var errors = null, suberrors;
@@ -23700,11 +23702,13 @@ function visitTypedFunction(traverse, node, path, state) {
   if (node.returnType) {
     var returnType = ctx.getType(node.returnType.typeAnnotation);
     utils.append(' var ret = (function (' + params.join(', ') + ') {', state);
-    utils.catchup(node.body.range[1], state);
-    utils.append(').apply(this, arguments); return ' + ctx.getProperty('check') + '(ret, ' + returnType + ');}', state);
+    traverse(node.body, path, state);
+    utils.catchup(node.body.range[1] - 1, state);
+    utils.append('}).apply(this, arguments); return ' + ctx.getProperty('check') + '(ret, ' + returnType + ');', state);
+  } else {
+    traverse(node.body, path, state);
   }
 
-  utils.catchup(node.range[1], state);
   return false;
 }
 visitTypedFunction.test = function(node, path, state) {

@@ -215,11 +215,13 @@ function visitTypedFunction(traverse, node, path, state) {
   if (node.returnType) {
     var returnType = ctx.getType(node.returnType.typeAnnotation);
     utils.append(' var ret = (function (' + params.join(', ') + ') {', state);
-    utils.catchup(node.body.range[1], state);
-    utils.append(').apply(this, arguments); return ' + ctx.getProperty('check') + '(ret, ' + returnType + ');}', state);
+    traverse(node.body, path, state);
+    utils.catchup(node.body.range[1] - 1, state);
+    utils.append('}).apply(this, arguments); return ' + ctx.getProperty('check') + '(ret, ' + returnType + ');', state);
+  } else {
+    traverse(node.body, path, state);
   }
 
-  utils.catchup(node.range[1], state);
   return false;
 }
 visitTypedFunction.test = function(node, path, state) {

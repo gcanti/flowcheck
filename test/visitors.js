@@ -178,7 +178,19 @@ tape('unions', function (tape) {
 });
 
 tape('functions', function (tape) {
-  tape.plan(9);
+  tape.plan(11);
+
+  tape.strictEqual(
+    transform('function fn(s) { return s; } // comment'),
+    'function fn(s) { return s; } // comment',
+    'should handle not typed functions'
+  );
+
+  tape.strictEqual(
+    transform('function f(x: number) { var y: number = 1; } // comment'),
+    'function f(x: number) {_f.check(arguments, _f.arguments([_f.number])); var y: number = _f.check(1, _f.number); } // comment',
+    'should traverse the function body when arguments are types (#11)'
+  );
 
   tape.strictEqual(
     transform('function fn(s: string) { return s; } // comment'),
