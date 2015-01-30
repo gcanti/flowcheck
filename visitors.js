@@ -260,11 +260,26 @@ visitProgram.test = function (node, path, state) {
   return node.type === Syntax.Program;
 };
 
+/*
+// experimental interface support
+function visitInterface(traverse, node, path, state) {
+  console.log(node);
+  var ctx = new Context(state);
+  utils.catchup(node.range[1], state);
+  utils.append('var ' + node.id.name + ' = ' + ctx.getType(node.body) + ';', state);
+  return false;
+}
+visitInterface.test = function (node, path, state) {
+  return node.type === Syntax.InterfaceDeclaration;
+};
+*/
+
 module.exports = {
   visitorList: [
     visitProgram,
     visitTypedFunction,
     visitTypedVariableDeclarator,
     visitTypeAlias
+    //, visitInterface
   ]
 };

@@ -90,7 +90,7 @@ var App = React.createClass({
       });
       eval(code);
     } catch (e) {
-      console.error(e);
+      console.error(e.message);
       this.setState({error: e.message});
     }
   },
@@ -115,6 +115,9 @@ var App = React.createClass({
               value={this.state.value}
               onChange={this.onSourceChange} />
           </div>
+          <p><b>React preview</b></p>
+          <p>use <code>React.render(..., preview);</code></p>
+          <div id="preview" style={{border: '1px solid #F6E4CC', padding: '20px', marginBottom: '20px'}}></div>
         </div>
         <div className="col-md-6">
           <p><b>Output</b></p>
