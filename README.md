@@ -27,6 +27,7 @@ If an assert fails the debugger kicks in so you can inspect the stack and quickl
 
 - Flowcheck tuples are fixed-length arrays [#227](https://github.com/facebook/flow/issues/227)
 - polymorphic types **are erased**
+- supports optional properties in objects (using `void` type) [#38](https://github.com/facebook/flow/issues/38)
 
 # Modules
 

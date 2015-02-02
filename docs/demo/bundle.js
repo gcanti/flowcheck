@@ -378,7 +378,7 @@ var App = React.createClass({displayName: "App",
       });
       eval(code);
     } catch (e) {
-      console.error(e);
+      console.error(e.message);
       this.setState({error: e.message});
     }
   },
@@ -402,7 +402,10 @@ var App = React.createClass({displayName: "App",
               mode: "javascript", 
               value: this.state.value, 
               onChange: this.onSourceChange})
-          )
+          ), 
+          React.createElement("p", null, React.createElement("b", null, "React preview")), 
+          React.createElement("p", null, "use ", React.createElement("code", null, "React.render(..., preview);")), 
+          React.createElement("div", {id: "preview", style: {border: '1px solid #F6E4CC', padding: '20px', marginBottom: '20px'}})
         ), 
         React.createElement("div", {className: "col-md-6"}, 
           React.createElement("p", null, React.createElement("b", null, "Output")), 
