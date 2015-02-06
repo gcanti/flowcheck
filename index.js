@@ -5,6 +5,10 @@ var through = require('through');
 
 module.exports = function (file, options) {
 
+  if (/\.json$/.test(file)) {
+    return through();
+  }
+
   var data = '';
   function write(chunk) {
     return data += chunk;

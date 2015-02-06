@@ -10,7 +10,7 @@ function contains(tape, bundle, code) {
 }
 
 tape('browserify', function (tape) {
-  tape.plan(2);
+  tape.plan(3);
 
   tape.test('should transform a file with reactify', function (tape) {
     tape.plan(2);
@@ -33,6 +33,16 @@ tape('browserify', function (tape) {
     .bundle(function(err, result) {
       tape.ok(!err, 'should not fail');
       contains(tape, result, 'var x = _f.check(1, _f.string);');
+    });
+  });
+
+  tape.test('shouldn\'t die if requiring JSON', function (tape) {
+    tape.plan(2);
+    browserify('./fixtures/main.json', {basedir: __dirname})
+    .transform(flowcheck)
+    .bundle(function(err, result) {
+      tape.ok(!err, 'should not fail');
+      contains(tape, result, '{"a": 1}');
     });
   });
 

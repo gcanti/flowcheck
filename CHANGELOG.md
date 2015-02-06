@@ -1,3 +1,7 @@
+v0.2.3 2015-02-06
+
+- it shouldn't die if requiring JSON, fix #12
+
 v0.2.1 2015-01-23
 
 - changed the default namespace from `f` to `_f` to avoid likely name conflicts
