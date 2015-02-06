@@ -252,7 +252,6 @@
     var errors = validate(x, type);
     if (errors) {
       var message = [].concat(errors).join('\n');
-      debugger;
       throw new TypeError(message);
     }
     return x;
