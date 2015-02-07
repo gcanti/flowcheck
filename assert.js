@@ -252,7 +252,10 @@
     var errors = validate(x, type);
     if (errors) {
       var message = [].concat(errors).join('\n');
-      debugger;
+      if (!check.failed) { // start the debugger only once
+        debugger;
+      }
+      check.failed = true;
       throw new TypeError(message);
     }
     return x;
