@@ -11,17 +11,33 @@
 
   'use strict';
 
+  function getFunctionName(f) {
+    return f.displayName || f.name || '<function' + f.length + '>';
+  }
+
   function Failure(actual, expected, ctx) {
     this.actual = actual;
     this.expected = expected;
     this.ctx = ctx;
   }
 
+  Failure.stringify = function (x) {
+    try { // handle circular references
+      return JSON.stringify(x, function (k, v) {
+        if (typeof v === 'function') { return '[' + getFunctionName(v) + ', Function]'; } // handle functions
+        if (v instanceof RegExp) { return '[' + String(v) + ', RegExp]'; } // handle regexps
+        return v;
+      });
+    } catch (e) {
+      return String(x);
+    }
+  };
+
   Failure.prototype.toString = function () {
     var ctx = this.ctx ? this.ctx.join(' / ') : '';
     ctx = ctx ? ', context: ' + ctx : ', (no context)';
     return 'Expected an instance of ' + this.expected.name +
-    ' got ' + JSON.stringify(this.actual) + ctx;
+    ' got ' + Failure.stringify(this.actual) + ctx;
   };
 
   function Type(name, validate, is) {
@@ -262,6 +278,7 @@
   }
 
   var exports = {
+    Failure: Failure,
     Type: Type,
     define: define,
     any: Any,

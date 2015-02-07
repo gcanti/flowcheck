@@ -1,6 +1,54 @@
 var tape = require('tape');
 var f = require('../assert');
 
+tape('Failure.stringify', function (tape) {
+
+  tape.plan(7);
+
+  tape.strictEqual(
+    f.Failure.stringify(1),
+    '1',
+    'should stringify numbers'
+  );
+
+  tape.strictEqual(
+    f.Failure.stringify('a'),
+    '"a"',
+    'should stringify strings'
+  );
+
+  tape.strictEqual(
+    f.Failure.stringify(true),
+    'true',
+    'should stringify booleans'
+  );
+
+  tape.strictEqual(
+    f.Failure.stringify({a: 1}),
+    '{"a":1}',
+    'should stringify objects'
+  );
+
+  tape.strictEqual(
+    f.Failure.stringify([1, 2, 3]),
+    '[1,2,3]',
+    'should stringify arrays'
+  );
+
+  tape.strictEqual(
+    f.Failure.stringify(Date),
+    '"[Date, Function]"',
+    'should stringify functions'
+  );
+
+  tape.strictEqual(
+    f.Failure.stringify(/^a/),
+    '"[/^a/, RegExp]"',
+    'should stringify regexps'
+  );
+
+});
+
 tape('number', function (tape) {
 
   tape.plan(5);
