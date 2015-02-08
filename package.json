@@ -4,8 +4,7 @@
   "description": "Runtime type checking for Flow",
   "main": "index.js",
   "scripts": {
-    "test": "node test | tap-spec",
-    "demo": "watchify -t reactify docs/demo/index.jsx -o docs/demo/bundle.js -v -x react"
+    "test": "node test | tap-spec"
   },
   "repository": {
     "type": "git",
@@ -22,10 +21,15 @@
     "through": "^2.3.6"
   },
   "devDependencies": {
-    "6to5ify": "^3.1.2",
+    "6to5ify": "^4.1.0",
     "browserify": "^8.1.1",
     "codemirror": "^4.11.0",
+    "gulp": "^3.8.10",
+    "gulp-header": "^1.2.2",
+    "gulp-jshint": "^1.9.2",
+    "gulp-react": "^2.0.0",
     "js-beautify": "^1.5.4",
+    "jshint-stylish": "^1.0.0",
     "react-code-mirror": "^3.0.3",
     "reactify": "^0.17.1",
     "tap-spec": "^2.1.1",

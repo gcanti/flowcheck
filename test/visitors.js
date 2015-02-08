@@ -1,3 +1,5 @@
+'use strict';
+
 var tape = require('tape');
 var originalTransform = require('../transform').transform;
 

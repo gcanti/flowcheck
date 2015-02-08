@@ -180,7 +180,7 @@ function visitTypedVariableDeclarator(traverse, node, path, state) {
   utils.catchup(node.range[1], state);
   return false;
 }
-visitTypedVariableDeclarator.test = function(node, path, state) {
+visitTypedVariableDeclarator.test = function(node) {
   return node.type === Syntax.VariableDeclarator &&
     node.id.typeAnnotation;
 };
@@ -224,7 +224,7 @@ function visitTypedFunction(traverse, node, path, state) {
 
   return false;
 }
-visitTypedFunction.test = function(node, path, state) {
+visitTypedFunction.test = function(node) {
   return (node.type === Syntax.FunctionDeclaration || node.type === Syntax.FunctionExpression) &&
   (
     node.returnType ||
@@ -243,7 +243,7 @@ function visitTypeAlias(traverse, node, path, state) {
   utils.append('var ' + node.id.name + ' = ' + ctx.getType(node.right) + ';', state);
   return false;
 }
-visitTypeAlias.test = function (node, path, state) {
+visitTypeAlias.test = function (node) {
   return node.type === Syntax.TypeAlias;
 };
 
@@ -256,7 +256,7 @@ function visitProgram(traverse, node, path, state) {
   }
   return true;
 }
-visitProgram.test = function (node, path, state) {
+visitProgram.test = function (node) {
   return node.type === Syntax.Program;
 };
 

@@ -1,3 +1,5 @@
+'use strict';
+
 var tape = require('tape');
 var browserify = require('browserify');
 var reactify = require('reactify');

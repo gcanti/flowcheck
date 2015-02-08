@@ -1,7 +1,6 @@
 'use strict';
 
 var jstransform = require('jstransform');
-var typeSyntax = require('jstransform/visitors/type-syntax');
 var visitorList = require('./visitors').visitorList;
 var Buffer = require('buffer').Buffer;
 
@@ -9,7 +8,7 @@ function getOptions(options) {
   options = options || {};
   options.namespace =   options.namespace || '_f';
   options.sourceMap =   options['source-map'] || options.sourceMap;
-  options.module =      options['module'] || options.module || 'flowcheck/assert';
+  options.module =      options.module || 'flowcheck/assert';
   options.skipImport =  options['skip-import'] || options.skipImport;
   return options;
 }
@@ -22,7 +21,7 @@ function inlineSourceMap(sourceMap, sourceCode, sourceFilename) {
   var json = sourceMap.toJSON();
   json.sources = [sourceFilename];
   json.sourcesContent = [sourceCode];
-  var base64 = Buffer(JSON.stringify(json)).toString('base64');
+  var base64 = new Buffer(JSON.stringify(json)).toString('base64');
   return '//# sourceMappingURL=data:application/json;base64,' +
          base64;
 }

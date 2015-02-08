@@ -1,3 +1,5 @@
+// watchify -t reactify docs/demo/index.jsx -o docs/demo/bundle.js -v -x react
+
 'use strict';
 
 var React = require('react');
