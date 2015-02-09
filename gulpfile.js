@@ -4,6 +4,7 @@ var gulp = require('gulp');
 var header = require('gulp-header');
 var jshint = require('gulp-jshint');
 var react = require('gulp-react');
+var beautify = require('gulp-beautify');
 var stylish = require('jshint-stylish');
 var pkg = require('./package.json');
 
@@ -25,6 +26,10 @@ gulp.task('transpile', function() {
       stripTypes: true
     }))
     .pipe(header(banner, {pkg: pkg}))
+    .pipe(beautify({
+      indentSize: 2,
+      preserveNewlines: false
+    }))
     .pipe(gulp.dest('.'));
 });
 

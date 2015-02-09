@@ -25,6 +25,7 @@
     "browserify": "^8.1.1",
     "codemirror": "^4.11.0",
     "gulp": "^3.8.10",
+    "gulp-beautify": "^1.1.2",
     "gulp-header": "^1.2.2",
     "gulp-jshint": "^1.9.2",
     "gulp-react": "^2.0.0",
