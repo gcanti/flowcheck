@@ -10,9 +10,9 @@ class Failure {
 
   actual: any;
   expected: Type;
-  ctx: ?Array<string | number>;
+  ctx: ?ValidationContext;
 
-  constructor(actual: any, expected: Type, ctx?: ?Array<string | number>) {
+  constructor(actual: any, expected: Type, ctx?: ?ValidationContext) {
     this.actual = actual;
     this.expected = expected;
     this.ctx = ctx;
@@ -38,12 +38,16 @@ class Failure {
 
 }
 
+type ValidationContext = Array<string | number>;
+type ValidationFunction = (x: any, ctx?: ?ValidationContext, failOnFirstError?: boolean) => ?Array<Failure>;
+type Predicate = (x: any) => boolean;
+
 class Type {
 
   name: string;
-  validate: (x: any, ctx?: ?Array<string | number>, failOnFirstError?: boolean) => ?Array<Failure>;
+  validate: ValidationFunction;
 
-  constructor(name: string, validate: (x: any, ctx?: ?Array<string | number>, failOnFirstError?: boolean) => ?Array<Failure>) {
+  constructor(name: string, validate: ValidationFunction) {
     this.name = name;
     this.validate = validate;
   }
@@ -54,7 +58,7 @@ class Type {
 
 }
 
-function define(name: string, is: (x: any) => boolean): Type {
+function define(name: string, is: Predicate): Type {
   var type: Type = new Type(name, (x, ctx) => {
     return is(x) ? null : [new Failure(x, type, ctx)];
   });
@@ -79,7 +83,7 @@ var Obj = define('object', (x) => x !== null && x !== undefined && typeof x === 
 
 var Func = define('function', (x) => typeof x === 'function');
 
-function validate(x: any, type: any, ctx?: Array<string | number>, failOnFirstError?: boolean) {
+function validate(x: any, type: any, ctx?: ?ValidationContext, failOnFirstError?: boolean) {
   if (type.validate) {
     return type.validate(x, ctx, failOnFirstError);
   }
