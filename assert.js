@@ -28,7 +28,7 @@ Failure.stringify = function (x) {
         return ("[" + String(v) + ", RegExp]");
       } // handle regexps
       return v;
-    });
+    }, 2);
   } catch (e) {
     return String(x);
   }
@@ -237,7 +237,7 @@ function slice(arr, start, end) {
 }
 function args(types, varargs) {
   var name = ("(" + types.map(getName).join(', ') + ", ..." + (varargs || Any).name + ")");
-  var len = types.length;
+  var length = types.length;
   var typesTuple = tuple(types);
   if (varargs) {
     varargs = list(varargs);
@@ -247,10 +247,10 @@ function args(types, varargs) {
     var args = x;
     // test if args is an array-like structure
     if (args.hasOwnProperty('length')) {
-      args = slice(args, 0, len);
+      args = slice(args, 0, length);
       // handle optional arguments filling the array with undefined values
-      if (args.length < len) {
-        args.length = len;
+      if (args.length < length) {
+        args.length = length;
       }
     }
     var errors = null,
@@ -264,7 +264,7 @@ function args(types, varargs) {
       errors.push.apply(errors, suberrors);
     }
     if (varargs) {
-      suberrors = varargs.validate(slice(x, len), ctx.concat('varargs'), failOnFirstError);
+      suberrors = varargs.validate(slice(x, length), ctx.concat('varargs'), failOnFirstError);
       if (suberrors) {
         if (failOnFirstError) {
           return suberrors;

@@ -27,13 +27,13 @@ tape('Failure.stringify', function (tape) {
 
   tape.strictEqual(
     f.Failure.stringify({a: 1}),
-    '{"a":1}',
+    '{\n  "a": 1\n}',
     'should stringify objects'
   );
 
   tape.strictEqual(
     f.Failure.stringify([1, 2, 3]),
-    '[1,2,3]',
+    '[\n  1,\n  2,\n  3\n]',
     'should stringify arrays'
   );
 
@@ -207,7 +207,7 @@ tape('tuple()', function (tape) {
 
   tape.strictEqual(
     f.tuple([f.string, f.number]).validate(['s']) + '',
-    'Expected an instance of [string, number] got ["s"], (no context)',
+    'Expected an instance of [string, number] got [\n  "s"\n], (no context)',
     'should fail if x is an array with wrong length'
   );
 

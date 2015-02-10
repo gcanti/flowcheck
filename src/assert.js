@@ -2,6 +2,10 @@
 
 'use strict';
 
+type ValidationContext = Array<string | number>;
+type ValidationFunction = (x: any, ctx?: ?ValidationContext, failOnFirstError?: boolean) => ?Array<Failure>;
+type Predicate = (x: any) => boolean;
+
 function getFunctionName (f: any): string {
   return f.displayName || f.name || `<function${f.length}>`;
 }
@@ -30,17 +34,13 @@ class Failure {
         if (typeof v === 'function') { return `[${getFunctionName(v)}, Function]`; } // handle functions
         if (v instanceof RegExp) { return `[${String(v)}, RegExp]`; } // handle regexps
         return v;
-      });
+      }, 2);
     } catch (e) {
       return String(x);
     }
   }
 
 }
-
-type ValidationContext = Array<string | number>;
-type ValidationFunction = (x: any, ctx?: ?ValidationContext, failOnFirstError?: boolean) => ?Array<Failure>;
-type Predicate = (x: any) => boolean;
 
 class Type {
 
@@ -210,9 +210,7 @@ function shape(props: {[key: string]: Type;}, name?: string): Type {
 function union(types: Array<Type>, name?: string): Type {
   name = name || types.map(getName).join(' | ');
   var type: Type = new Type(name, (x, ctx) => {
-    if (types.some(function (type) {
-      return type.is(x);
-    })) { return null; }
+    if (types.some((type) => type.is(x))) { return null; }
     ctx = ctx || [];
     return [new Failure(x, type, ctx.concat(name))];
   });
@@ -225,7 +223,7 @@ function slice<T>(arr: Array<T>, start?: number, end?: number): Array<T> {
 
 function args(types: Array<Type>, varargs?: Type): Type {
   var name = `(${types.map(getName).join(', ')}, ...${(varargs || Any).name})`;
-  var len = types.length;
+  var length = types.length;
   var typesTuple = tuple(types);
   if (varargs) { varargs = list(varargs); }
   return new Type(name, (x, ctx, failOnFirstError) => {
@@ -233,9 +231,9 @@ function args(types: Array<Type>, varargs?: Type): Type {
     var args = x;
     // test if args is an array-like structure
     if (args.hasOwnProperty('length')) {
-      args = slice(args, 0, len);
+      args = slice(args, 0, length);
       // handle optional arguments filling the array with undefined values
-      if (args.length < len) { args.length = len; }
+      if (args.length < length) { args.length = length; }
     }
     var errors: ?Array<Failure> = null, suberrors: ?Array<Failure>;
     suberrors = typesTuple.validate(args, ctx.concat('arguments'), failOnFirstError);
@@ -245,7 +243,7 @@ function args(types: Array<Type>, varargs?: Type): Type {
       errors.push.apply(errors, suberrors);
     }
     if (varargs) {
-      suberrors = varargs.validate(slice(x, len), ctx.concat('varargs'), failOnFirstError);
+      suberrors = varargs.validate(slice(x, length), ctx.concat('varargs'), failOnFirstError);
       if (suberrors) {
         if (failOnFirstError) { return suberrors; }
         errors = errors || [];
@@ -273,9 +271,9 @@ function check<T>(x: T, type: Type): T {
 }
 
 module.exports = {
-  Failure: Failure,
-  Type: Type,
-  define: define,
+  Failure,
+  Type,
+  define,
   any: Any,
   mixed: Mixed,
   'void': Void,
@@ -284,13 +282,13 @@ module.exports = {
   'boolean': Bool,
   object: Obj,
   'function': Func,
-  list: list,
-  optional: optional,
-  maybe: maybe,
-  tuple: tuple,
-  dict: dict,
-  shape: shape,
-  union: union,
+  list,
+  optional,
+  maybe,
+  tuple,
+  dict,
+  shape,
+  union,
   arguments: args,
-  check: check
+  check
 };

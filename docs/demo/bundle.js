@@ -1,291 +1,321 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/Users/giulio/Documents/Projects/github/flowcheck/assert.js":[function(require,module,exports){
-(function (root, factory) {
-  'use strict';
-  if (typeof define === 'function' && define.amd) {
-    define([], factory);
-  } else if (typeof exports === 'object') {
-    module.exports = factory();
-  } else {
-    root.f = factory();
+//     flowcheck 0.2.3
+//     https://github.com/gcanti/flowcheck
+//     (c) 2015 Giulio Canti <giulio.canti@gmail.com>
+//     flowcheck may be freely distributed under the MIT license.
+//     (checked with Flow and transpiled with jsx)
+/* @flow */
+'use strict';
+function getFunctionName(f) {
+  return f.displayName || f.name || ("<function" + f.length + ">");
+}
+function Failure(actual, expected, ctx) {
+  this.actual = actual;
+  this.expected = expected;
+  this.ctx = ctx;
+}
+Failure.prototype.toString = function () {
+  var ctx = this.ctx ? this.ctx.join(' / ') : '';
+  ctx = ctx ? (", context: " + ctx) : ', (no context)';
+  return ("Expected an instance of " + this.expected.name + " got " + (Failure.stringify(this.actual) + ctx));
+};
+Failure.stringify = function (x) {
+  try { // handle circular references
+    return JSON.stringify(x, function (k, v) {
+      if (typeof v === 'function') {
+        return ("[" + getFunctionName(v) + ", Function]");
+      } // handle functions
+      if (v instanceof RegExp) {
+        return ("[" + String(v) + ", RegExp]");
+      } // handle regexps
+      return v;
+    }, 2);
+  } catch (e) {
+    return String(x);
   }
-}(this, function () {
-
-  'use strict';
-
-  function Failure(actual, expected, ctx) {
-    this.actual = actual;
-    this.expected = expected;
-    this.ctx = ctx;
-  }
-
-  Failure.prototype.toString = function () {
-    var ctx = this.ctx ? this.ctx.join(' / ') : '';
-    ctx = ctx ? ', context: ' + ctx : ', (no context)';
-    return 'Expected an instance of ' + this.expected.name +
-    ' got ' + JSON.stringify(this.actual) + ctx;
-  };
-
-  function Type(name, validate, is) {
-    this.name = name;
-    this.validate = validate;
-    if (is) { this.is = is; }
-  }
-
-  Type.prototype.is = function (x) {
-    return this.validate(x, null, true) === null;
-  };
-
-  function define(name, is) {
-    var type = new Type(name, function (x, ctx) {
-      return is(x) ? null : [new Failure(x, type, ctx)];
-    }, is);
-    return type;
-  }
-
-  var Any = define('any', function () {
-    return true;
+};
+function Type(name, validate) {
+  this.name = name;
+  this.validate = validate;
+}
+Type.prototype.is = function (x) {
+  return this.validate(x, null, true) === null;
+};
+function define(name, is) {
+  var type = new Type(name, function (x, ctx) {
+    return is(x) ? null : [new Failure(x, type, ctx)];
   });
-
-  var Mixed = define('mixed', function () {
-    return true;
-  });
-
-  var Void = define('void', function (x) {
-    return x === void 0;
-  });
-
-  var Str = define('string', function (x) {
-    return typeof x === 'string';
-  });
-
-  var Num = define('number', function (x) {
-    return typeof x === 'number';
-  });
-
-  var Bool = define('boolean', function (x) {
-    return x === true || x === false;
-  });
-
-  var Arr = define('array', function (x) {
-    return x instanceof Array;
-  });
-
-  var Obj = define('object', function (x) {
-    return x != null && typeof x === 'object' && !Arr.is(x);
-  });
-
-  var Func = define('function', function (x) {
-    return typeof x === 'function';
-  });
-
-  function validate(x, type, ctx, fast) {
-    if (type.validate) { return type.validate(x, ctx, fast); }
-    return x instanceof type ? null : [new Failure(x, type, ctx)];
+  return type;
+}
+var Any = define('any', function () {
+  return true;
+});
+var Mixed = define('mixed', function () {
+  return true;
+});
+var Void = define('void', function (x) {
+  return x === void 0;
+});
+var Str = define('string', function (x) {
+  return typeof x === 'string';
+});
+var Num = define('number', function (x) {
+  return typeof x === 'number';
+});
+var Bool = define('boolean', function (x) {
+  return x === true || x === false;
+});
+var Arr = define('array', function (x) {
+  return x instanceof Array;
+});
+var Obj = define('object', function (x) {
+  return x !== null && x !== undefined && typeof x === 'object' && !Arr.is(x);
+});
+var Func = define('function', function (x) {
+  return typeof x === 'function';
+});
+function validate(x, type, ctx, failOnFirstError) {
+  if (type.validate) {
+    return type.validate(x, ctx, failOnFirstError);
   }
-
-  function list(type, name) {
-    name = name || 'Array<' + type.name + '>';
-    return new Type(name, function (x, ctx, fast) {
-      ctx = ctx || [];
-      ctx.push(name);
-      // if x is not an array, fail fast
-      if (!Arr.is(x)) { return [new Failure(x, Arr, ctx)]; }
-      var errors = null, suberrors;
-      for (var i = 0, len = x.length ; i < len ; i++ ) {
-        suberrors = validate(x[i], type, ctx.concat(i));
-        if (suberrors) {
-          if (fast) { return suberrors; }
-          errors = errors || [];
-          errors.push.apply(errors, suberrors);
-        }
-      }
-      return errors;
-    });
-  }
-
-  function optional(type, name) {
-    name = name || type.name + '?';
-    return new Type(name, function (x, ctx, fast) {
-      if (x === void 0) { return null; }
-      ctx = ctx || [];
-      ctx.push(name);
-      return validate(x, type, ctx, fast);
-    });
-  }
-
-  function maybe(type, name) {
-    name = name || '?' + type.name;
-    return new Type(name, function (x, ctx, fast) {
-      if (x === null) { return null; }
-      ctx = ctx || [];
-      ctx.push(name);
-      return validate(x, type, ctx, fast);
-    });
-  }
-
-  function getName(type) {
-    return type.name;
-  }
-
-  function tuple(types, name) {
-    name = name || '[' + types.map(getName).join(', ') + ']';
-    var dimension = types.length;
-    var type = new Type(name, function (x, ctx, fast) {
-      ctx = ctx || [];
-      // if x is not an array, fail fast
-      if (!Arr.is(x)) { return [new Failure(x, Arr, ctx.concat(name))]; }
-      // if x has a wrong length, fail fast
-      if (x.length !== dimension) { return [new Failure(x, type, ctx)]; }
-      var errors = null, suberrors;
-      for (var i = 0 ; i < dimension ; i++ ) {
-        suberrors = validate(x[i], types[i], ctx.concat(name, i));
-        if (suberrors) {
-          if (fast) { return suberrors; }
-          errors = errors || [];
-          errors.push.apply(errors, suberrors);
-        }
-      }
-      return errors;
-    });
-    return type;
-  }
-
-  function dict(domain, codomain, name) {
-    name = name || '{[key: ' + domain.name + ']: ' + codomain.name + '}';
-    return new Type(name, function (x, ctx, fast) {
-      ctx = ctx || [];
-      // if x is not an object, fail fast
-      if (!Obj.is(x)) { return [new Failure(x, Obj, ctx.concat(name))]; }
-      var errors = null, suberrors;
-      for (var k in x) {
-        if (x.hasOwnProperty(k)) {
-          // check domain
-          suberrors = validate(k, domain, ctx.concat(name, k));
-          if (suberrors) {
-            if (fast) { return suberrors; }
-            errors = errors || [];
-            errors.push.apply(errors, suberrors);
-          }
-          // check codomain
-          suberrors = validate(x[k], codomain, ctx.concat(name, k));
-          if (suberrors) {
-            if (fast) { return suberrors; }
-            errors = errors || [];
-            errors.push.apply(errors, suberrors);
-          }
-        }
-      }
-      return errors;
-    });
-  }
-
-  function shape(props, name) {
-    name = name || '{' + Object.keys(props).map(function (k) { return k + ': ' + props[k].name + ';'; }).join(' ') + '}';
-    return new Type(name, function (x, ctx, fast) {
-      ctx = ctx || [];
-      // if x is not an object, fail fast
-      if (!Obj.is(x)) { return [new Failure(x, Obj, ctx.concat(name))]; }
-      var errors = null, suberrors;
-      for (var k in props) {
-        if (props.hasOwnProperty(k)) {
-          suberrors = validate(x[k], props[k], ctx.concat(name, k));
-          if (suberrors) {
-            if (fast) { return suberrors; }
-            errors = errors || [];
-            errors.push.apply(errors, suberrors);
-          }
-        }
-      }
-      return errors;
-    });
-  }
-
-  function union(types, name) {
-    name = name || types.map(getName).join(' | ');
-    var type = new Type(name, function (x, ctx) {
-      if (types.some(function (type) {
-        return type.is(x);
-      })) { return null; }
-      ctx = ctx || [];
-      return [new Failure(x, type, ctx.concat(name))];
-    });
-    return type;
-  }
-
-  function slice(arr, start, end) {
-    return Array.prototype.slice.call(arr, start, end);
-  }
-
-  function args(types, varargs) {
-    var name = '(' + types.map(getName).join(', ') + ', ...' + (varargs || Any).name + ')';
-    var len = types.length;
-    var typesTuple = tuple(types);
-    if (varargs) { varargs = list(varargs); }
-    return new Type(name, function (x, ctx, fast) {
-      ctx = ctx || [];
-      var args = x;
-      // test if args is an array-like structure
-      if (args.hasOwnProperty('length')) {
-        args = slice(args, 0, len);
-        // handle optional arguments filling the array with undefined values
-        if (args.length < len) { args.length = len; }
-      }
-      var errors = null, suberrors;
-      suberrors = typesTuple.validate(args, ctx.concat('arguments'), fast);
+  return x instanceof type ? null : [new Failure(x, type, ctx)];
+}
+function list(type, name) {
+  name = name || ("Array<" + type.name + ">");
+  return new Type(name, function (x, ctx, failOnFirstError) {
+    ctx = ctx || [];
+    ctx.push(name);
+    // if x is not an array, fail fast
+    if (!Arr.is(x)) {
+      return [new Failure(x, Arr, ctx)];
+    }
+    var errors = null,
+        suberrors;
+    for (var i = 0, len = x.length; i < len; i++) {
+      suberrors = validate(x[i], type, ctx.concat(i));
       if (suberrors) {
-        if (fast) { return suberrors; }
+        if (failOnFirstError) {
+          return suberrors;
+        }
         errors = errors || [];
         errors.push.apply(errors, suberrors);
       }
-      if (varargs) {
-        suberrors = varargs.validate(slice(x, len), ctx.concat('varargs'), fast);
+    }
+    return errors;
+  });
+}
+function optional(type, name) {
+  name = name || (type.name + "?");
+  return new Type(name, function (x, ctx, failOnFirstError) {
+    if (x === void 0) {
+      return null;
+    }
+    ctx = ctx || [];
+    ctx.push(name);
+    return validate(x, type, ctx, failOnFirstError);
+  });
+}
+function maybe(type, name) {
+  name = name || ("?" + type.name);
+  return new Type(name, function (x, ctx, failOnFirstError) {
+    if (x === null) {
+      return null;
+    }
+    ctx = ctx || [];
+    ctx.push(name);
+    return validate(x, type, ctx, failOnFirstError);
+  });
+}
+function getName(type) {
+  return type.name;
+}
+function tuple(types, name) {
+  name = name || ("[" + types.map(getName).join(', ') + "]");
+  var dimension = types.length;
+  var type = new Type(name, function (x, ctx, failOnFirstError) {
+    ctx = ctx || [];
+    // if x is not an array, fail fast
+    if (!Arr.is(x)) {
+      return [new Failure(x, Arr, ctx.concat(name))];
+    }
+    // if x has a wrong length, fail failOnFirstError
+    if (x.length !== dimension) {
+      return [new Failure(x, type, ctx)];
+    }
+    var errors = null,
+        suberrors;
+    for (var i = 0; i < dimension; i++) {
+      suberrors = validate(x[i], types[i], ctx.concat(name, i));
+      if (suberrors) {
+        if (failOnFirstError) {
+          return suberrors;
+        }
+        errors = errors || [];
+        errors.push.apply(errors, suberrors);
+      }
+    }
+    return errors;
+  });
+  return type;
+}
+function dict(domain, codomain, name) {
+  name = name || ("{[key: " + domain.name + "]: " + codomain.name + "}");
+  return new Type(name, function (x, ctx, failOnFirstError) {
+    ctx = ctx || [];
+    // if x is not an object, fail fast
+    if (!Obj.is(x)) {
+      return [new Failure(x, Obj, ctx.concat(name))];
+    }
+    var errors = null,
+        suberrors;
+    for (var k in x) {
+      if (x.hasOwnProperty(k)) {
+        // check domain
+        suberrors = validate(k, domain, ctx.concat(name, k));
         if (suberrors) {
-          if (fast) { return suberrors; }
+          if (failOnFirstError) {
+            return suberrors;
+          }
+          errors = errors || [];
+          errors.push.apply(errors, suberrors);
+        }
+        // check codomain
+        suberrors = validate(x[k], codomain, ctx.concat(name, k));
+        if (suberrors) {
+          if (failOnFirstError) {
+            return suberrors;
+          }
           errors = errors || [];
           errors.push.apply(errors, suberrors);
         }
       }
-      return errors;
-    });
-  }
-
-  function check(x, type) {
-    var errors = validate(x, type);
-    if (errors) {
-      var message = [].concat(errors).join('\n');
-      debugger;
-      throw new TypeError(message);
     }
-    return x;
+    return errors;
+  });
+}
+function shape(props, name) {
+  name = name || ("{" + Object.keys(props).map(function (k) {
+    return k + ': ' + props[k].name + ';';
+  }).join(' ') + "}");
+  return new Type(name, function (x, ctx, failOnFirstError) {
+    ctx = ctx || [];
+    // if x is not an object, fail fast
+    if (!Obj.is(x)) {
+      return [new Failure(x, Obj, ctx.concat(name))];
+    }
+    var errors = null,
+        suberrors;
+    for (var k in props) {
+      if (props.hasOwnProperty(k)) {
+        suberrors = validate(x[k], props[k], ctx.concat(name, k));
+        if (suberrors) {
+          if (failOnFirstError) {
+            return suberrors;
+          }
+          errors = errors || [];
+          errors.push.apply(errors, suberrors);
+        }
+      }
+    }
+    return errors;
+  });
+}
+function union(types, name) {
+  name = name || types.map(getName).join(' | ');
+  var type = new Type(name, function (x, ctx) {
+    if (types.some(function (type) {
+      return type.is(x);
+    })) {
+      return null;
+    }
+    ctx = ctx || [];
+    return [new Failure(x, type, ctx.concat(name))];
+  });
+  return type;
+}
+function slice(arr, start, end) {
+  return Array.prototype.slice.call(arr, start, end);
+}
+function args(types, varargs) {
+  var name = ("(" + types.map(getName).join(', ') + ", ..." + (varargs || Any).name + ")");
+  var length = types.length;
+  var typesTuple = tuple(types);
+  if (varargs) {
+    varargs = list(varargs);
   }
-
-  var exports = {
-    Type: Type,
-    define: define,
-    any: Any,
-    mixed: Mixed,
-    'void': Void,
-    number: Num,
-    string: Str,
-    'boolean': Bool,
-    object: Obj,
-    'function': Func,
-    list: list,
-    optional: optional,
-    maybe: maybe,
-    tuple: tuple,
-    dict: dict,
-    shape: shape,
-    union: union,
-    arguments: args,
-    check: check
-  };
-
-  return exports;
-
-}));
-
+  return new Type(name, function (x, ctx, failOnFirstError) {
+    ctx = ctx || [];
+    var args = x;
+    // test if args is an array-like structure
+    if (args.hasOwnProperty('length')) {
+      args = slice(args, 0, length);
+      // handle optional arguments filling the array with undefined values
+      if (args.length < length) {
+        args.length = length;
+      }
+    }
+    var errors = null,
+        suberrors;
+    suberrors = typesTuple.validate(args, ctx.concat('arguments'), failOnFirstError);
+    if (suberrors) {
+      if (failOnFirstError) {
+        return suberrors;
+      }
+      errors = errors || [];
+      errors.push.apply(errors, suberrors);
+    }
+    if (varargs) {
+      suberrors = varargs.validate(slice(x, length), ctx.concat('varargs'), failOnFirstError);
+      if (suberrors) {
+        if (failOnFirstError) {
+          return suberrors;
+        }
+        errors = errors || [];
+        errors.push.apply(errors, suberrors);
+      }
+    }
+    return errors;
+  });
+}
+var failed = false;
+function check(x, type) {
+  var errors = validate(x, type);
+  if (errors) {
+    var message = [].concat(errors).join('\n');
+    if (!failed) { // start the debugger only once
+      /*jshint debug: true*/
+      debugger;
+    }
+    failed = true;
+    throw new TypeError(message);
+  }
+  return x;
+}
+module.exports = {
+  Failure: Failure,
+  Type: Type,
+  define: define,
+  any: Any,
+  mixed: Mixed,
+  'void': Void,
+  number: Num,
+  string: Str,
+  'boolean': Bool,
+  object: Obj,
+  'function': Func,
+  list: list,
+  optional: optional,
+  maybe: maybe,
+  tuple: tuple,
+  dict: dict,
+  shape: shape,
+  union: union,
+  arguments: args,
+  check: check
+};
 },{}],"/Users/giulio/Documents/Projects/github/flowcheck/docs/demo/index.jsx":[function(require,module,exports){
+// watchify -t reactify docs/demo/index.jsx -o docs/demo/bundle.js -v -x react
+
 'use strict';
 
 var React = require('react');
@@ -23190,156 +23220,7 @@ exports.getNodeSourceText = getNodeSourceText;
 exports.getTempVar = getTempVar;
 exports.getTempVarWithValue = getTempVarWithValue;
 
-},{"./docblock":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/jstransform/src/docblock.js","esprima-fb":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/jstransform/node_modules/esprima-fb/esprima.js"}],"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/jstransform/visitors/type-syntax.js":[function(require,module,exports){
-var esprima = require('esprima-fb');
-var utils = require('../src/utils');
-
-var Syntax = esprima.Syntax;
-
-function _isFunctionNode(node) {
-  return node.type === Syntax.FunctionDeclaration
-         || node.type === Syntax.FunctionExpression
-         || node.type === Syntax.ArrowFunctionExpression;
-}
-
-function visitClassProperty(traverse, node, path, state) {
-  utils.catchup(node.range[0], state);
-  utils.catchupWhiteOut(node.range[1], state);
-  return false;
-}
-visitClassProperty.test = function(node, path, state) {
-  return node.type === Syntax.ClassProperty;
-};
-
-function visitTypeAlias(traverse, node, path, state) {
-  utils.catchupWhiteOut(node.range[1], state);
-  return false;
-}
-visitTypeAlias.test = function(node, path, state) {
-  return node.type === Syntax.TypeAlias;
-};
-
-function visitInterfaceDeclaration(traverse, node, path, state) {
-  utils.catchupWhiteOut(node.range[1], state);
-  return false;
-}
-visitInterfaceDeclaration.test = function(node, path, state) {
-  return node.type === Syntax.InterfaceDeclaration;
-};
-
-function visitDeclare(traverse, node, path, state) {
-  utils.catchupWhiteOut(node.range[1], state);
-  return false;
-}
-visitDeclare.test = function(node, path, state) {
-  switch (node.type) {
-  case Syntax.DeclareVariable:
-  case Syntax.DeclareFunction:
-  case Syntax.DeclareClass:
-  case Syntax.DeclareModule: return true
-  }
-  return false;
-}
-
-function visitFunctionParametricAnnotation(traverse, node, path, state) {
-  utils.catchup(node.range[0], state);
-  utils.catchupWhiteOut(node.range[1], state);
-  return false;
-}
-visitFunctionParametricAnnotation.test = function(node, path, state) {
-  return node.type === Syntax.TypeParameterDeclaration
-         && path[0]
-         && _isFunctionNode(path[0])
-         && node === path[0].typeParameters;
-};
-
-function visitFunctionReturnAnnotation(traverse, node, path, state) {
-  utils.catchup(node.range[0], state);
-  utils.catchupWhiteOut(node.range[1], state);
-  return false;
-}
-visitFunctionReturnAnnotation.test = function(node, path, state) {
-  return path[0] && _isFunctionNode(path[0]) && node === path[0].returnType;
-};
-
-function visitOptionalFunctionParameterAnnotation(traverse, node, path, state) {
-  utils.catchup(node.range[0] + node.name.length, state);
-  utils.catchupWhiteOut(node.range[1], state);
-  return false;
-}
-visitOptionalFunctionParameterAnnotation.test = function(node, path, state) {
-  return node.type === Syntax.Identifier
-         && node.optional
-         && path[0]
-         && _isFunctionNode(path[0]);
-};
-
-function visitTypeAnnotatedIdentifier(traverse, node, path, state) {
-  utils.catchup(node.typeAnnotation.range[0], state);
-  utils.catchupWhiteOut(node.typeAnnotation.range[1], state);
-  return false;
-}
-visitTypeAnnotatedIdentifier.test = function(node, path, state) {
-  return node.type === Syntax.Identifier && node.typeAnnotation;
-};
-
-function visitTypeAnnotatedObjectOrArrayPattern(traverse, node, path, state) {
-  utils.catchup(node.typeAnnotation.range[0], state);
-  utils.catchupWhiteOut(node.typeAnnotation.range[1], state);
-  return false;
-}
-visitTypeAnnotatedObjectOrArrayPattern.test = function(node, path, state) {
-  var rightType = node.type === Syntax.ObjectPattern
-                || node.type === Syntax.ArrayPattern;
-  return rightType && node.typeAnnotation;
-};
-
-/**
- * Methods cause trouble, since esprima parses them as a key/value pair, where
- * the location of the value starts at the method body. For example
- * { bar(x:number,...y:Array<number>):number {} }
- * is parsed as
- * { bar: function(x: number, ...y:Array<number>): number {} }
- * except that the location of the FunctionExpression value is 40-something,
- * which is the location of the function body. This means that by the time we
- * visit the params, rest param, and return type organically, we've already
- * catchup()'d passed them.
- */
-function visitMethod(traverse, node, path, state) {
-  path.unshift(node);
-  traverse(node.key, path, state);
-
-  path.unshift(node.value);
-  traverse(node.value.params, path, state);
-  node.value.rest && traverse(node.value.rest, path, state);
-  node.value.returnType && traverse(node.value.returnType, path, state);
-  traverse(node.value.body, path, state);
-
-  path.shift();
-
-  path.shift();
-  return false;
-}
-
-visitMethod.test = function(node, path, state) {
-  return (node.type === "Property" && (node.method || node.kind === "set" || node.kind === "get"))
-      || (node.type === "MethodDefinition");
-};
-
-exports.visitorList = [
-  visitClassProperty,
-  visitDeclare,
-  visitInterfaceDeclaration,
-  visitFunctionParametricAnnotation,
-  visitFunctionReturnAnnotation,
-  visitMethod,
-  visitOptionalFunctionParameterAnnotation,
-  visitTypeAlias,
-  visitTypeAnnotatedIdentifier,
-  visitTypeAnnotatedObjectOrArrayPattern
-];
-
-},{"../src/utils":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/jstransform/src/utils.js","esprima-fb":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/jstransform/node_modules/esprima-fb/esprima.js"}],"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/react-code-mirror/index.js":[function(require,module,exports){
+},{"./docblock":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/jstransform/src/docblock.js","esprima-fb":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/jstransform/node_modules/esprima-fb/esprima.js"}],"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/react-code-mirror/index.js":[function(require,module,exports){
 'use strict';
 
 var React = require('react');
@@ -23433,7 +23314,6 @@ module.exports = CodeMirrorEditor;
 'use strict';
 
 var jstransform = require('jstransform');
-var typeSyntax = require('jstransform/visitors/type-syntax');
 var visitorList = require('./visitors').visitorList;
 var Buffer = require('buffer').Buffer;
 
@@ -23441,7 +23321,7 @@ function getOptions(options) {
   options = options || {};
   options.namespace =   options.namespace || '_f';
   options.sourceMap =   options['source-map'] || options.sourceMap;
-  options.module =      options['module'] || options.module || 'flowcheck/assert';
+  options.module =      options.module || 'flowcheck/assert';
   options.skipImport =  options['skip-import'] || options.skipImport;
   return options;
 }
@@ -23454,7 +23334,7 @@ function inlineSourceMap(sourceMap, sourceCode, sourceFilename) {
   var json = sourceMap.toJSON();
   json.sources = [sourceFilename];
   json.sourcesContent = [sourceCode];
-  var base64 = Buffer(JSON.stringify(json)).toString('base64');
+  var base64 = new Buffer(JSON.stringify(json)).toString('base64');
   return '//# sourceMappingURL=data:application/json;base64,' +
          base64;
 }
@@ -23487,7 +23367,7 @@ module.exports = {
 
 };
 
-},{"./visitors":"/Users/giulio/Documents/Projects/github/flowcheck/visitors.js","buffer":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js","jstransform":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/jstransform/src/jstransform.js","jstransform/visitors/type-syntax":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/jstransform/visitors/type-syntax.js"}],"/Users/giulio/Documents/Projects/github/flowcheck/visitors.js":[function(require,module,exports){
+},{"./visitors":"/Users/giulio/Documents/Projects/github/flowcheck/visitors.js","buffer":"/usr/local/lib/node_modules/watchify/node_modules/browserify/node_modules/buffer/index.js","jstransform":"/Users/giulio/Documents/Projects/github/flowcheck/node_modules/jstransform/src/jstransform.js"}],"/Users/giulio/Documents/Projects/github/flowcheck/visitors.js":[function(require,module,exports){
 'use strict';
 
 var jstransform = require('jstransform');
@@ -23670,7 +23550,7 @@ function visitTypedVariableDeclarator(traverse, node, path, state) {
   utils.catchup(node.range[1], state);
   return false;
 }
-visitTypedVariableDeclarator.test = function(node, path, state) {
+visitTypedVariableDeclarator.test = function(node) {
   return node.type === Syntax.VariableDeclarator &&
     node.id.typeAnnotation;
 };
@@ -23714,7 +23594,7 @@ function visitTypedFunction(traverse, node, path, state) {
 
   return false;
 }
-visitTypedFunction.test = function(node, path, state) {
+visitTypedFunction.test = function(node) {
   return (node.type === Syntax.FunctionDeclaration || node.type === Syntax.FunctionExpression) &&
   (
     node.returnType ||
@@ -23733,7 +23613,7 @@ function visitTypeAlias(traverse, node, path, state) {
   utils.append('var ' + node.id.name + ' = ' + ctx.getType(node.right) + ';', state);
   return false;
 }
-visitTypeAlias.test = function (node, path, state) {
+visitTypeAlias.test = function (node) {
   return node.type === Syntax.TypeAlias;
 };
 
@@ -23746,7 +23626,7 @@ function visitProgram(traverse, node, path, state) {
   }
   return true;
 }
-visitProgram.test = function (node, path, state) {
+visitProgram.test = function (node) {
   return node.type === Syntax.Program;
 };
 
