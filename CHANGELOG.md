@@ -10,6 +10,11 @@
 
 **Note**: Gaps between patch versions are faulty/broken releases.
 
+## v0.2.5
+
+- **Internal**
+  + Removed `debugger` statement #15
+
 ## v0.2.4
 
 - **Bug Fix**

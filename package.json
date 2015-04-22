@@ -1,6 +1,6 @@
 {
   "name": "flowcheck",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Runtime type checking for Flow",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "devDependencies": {
     "babelify": "^6.0.2",
     "browserify": "^8.1.1",
-    "gulp": "^3.8.10",
+    "gulp": "^3.8.11",
     "gulp-beautify": "^1.1.2",
     "gulp-header": "^1.2.2",
     "gulp-jshint": "^1.9.2",

@@ -253,17 +253,10 @@ function args(types: Array<Type>, varargs?: Type): Type {
   });
 }
 
-var failed = false;
-
 function check<T>(x: T, type: Type): T {
   var errors = validate(x, type);
   if (errors) {
     var message = [].concat(errors).join('\n');
-    if (!failed) { // start the debugger only once
-      /*jshint debug: true*/
-      debugger;
-    }
-    failed = true;
     throw new TypeError(message);
   }
   return x;

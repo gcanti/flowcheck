@@ -1,4 +1,4 @@
-//     flowcheck 0.2.3
+//     flowcheck 0.2.5
 //     https://github.com/gcanti/flowcheck
 //     (c) 2015 Giulio Canti <giulio.canti@gmail.com>
 //     flowcheck may be freely distributed under the MIT license.
@@ -29,9 +29,8 @@ Failure.stringify = function (x) {
       } // handle regexps
       return v;
     }, 2);
-  } catch (e) {
-    return String(x);
-  }
+  } catch (e) {}
+  return String(x);
 };
 function Type(name, validate) {
   this.name = name;
@@ -276,16 +275,10 @@ function args(types, varargs) {
     return errors;
   });
 }
-var failed = false;
 function check(x, type) {
   var errors = validate(x, type);
   if (errors) {
     var message = [].concat(errors).join('\n');
-    if (!failed) { // start the debugger only once
-      /*jshint debug: true*/
-      debugger;
-    }
-    failed = true;
     throw new TypeError(message);
   }
   return x;
