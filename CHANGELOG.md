@@ -1,19 +1,43 @@
-v0.2.3 2015-02-06
+# Changelog
 
-- it shouldn't die if requiring JSON, fix #12
+> **Tags:**
+> - [New Feature]
+> - [Bug Fix]
+> - [Breaking Change]
+> - [Documentation]
+> - [Internal]
+> - [Polish]
 
-v0.2.1 2015-01-23
+**Note**: Gaps between patch versions are faulty/broken releases.
 
-- changed the default namespace from `f` to `_f` to avoid likely name conflicts
-- added a `visitProgram` to `visitor.js`. It adds `var _f = require("flowcheck/assert");` at the beginning of the file, fix #4
-- added a boolean option `skipImport` (default `false`). If set to `true`, skips the `visitProgram` visitor (useful for tests or if you want to import by hand the module flowcheck/assert as a global)
-- added to `visitProgram` a `namespace.indexOf('require') === -1` check in order to not break flowcheck-loader (temporary)
+## v0.2.4
 
-v0.2 2015-01-21
+- **Bug Fix**
+  + Removed CRLF from `visitProgram` causing wrong bad sourceMaps
+- **Internal**
+  + Upgrade to latest babelify
 
-- polished code
-- added more tests
+## v0.2.3
 
-v0.1 2015-01-20
+- **Internal**
+  + It shouldn't die if requiring JSON, fix #12
 
-- first release
+## v0.2.1
+
+- **Internal**
+  + Changed the default namespace from `f` to `_f` to avoid likely name conflicts
+  + Added a `visitProgram` to `visitor.js`. It adds `var _f = require("flowcheck/assert");` at the beginning of the file, fix #4
+  + Added to `visitProgram` a `namespace.indexOf('require') === -1` check in order to not break flowcheck-loader (temporary)
+- **New Feature**
+  + Added a boolean option `skipImport` (default `false`). If set to `true`, skips the `visitProgram` visitor (useful for tests or if you want to import by hand the module flowcheck/assert as a global)
+
+## v0.2
+
+- **Polish**
+  + Code refactoring
+- **Internal**
+  + Added more tests
+
+## v0.1
+
+- First release

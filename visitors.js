@@ -252,7 +252,7 @@ function visitProgram(traverse, node, path, state) {
   var namespace = ctx.namespace;
   // FIXME remove 2nd condition when flowcheck-loader will not use the namespace option
   if (!ctx.skipImport && namespace.indexOf('require') === -1) {
-    utils.append('var ' + namespace + ' = require(' + JSON.stringify(ctx.module) + ');\n\n', state);
+    utils.append('var ' + namespace + ' = require(' + JSON.stringify(ctx.module) + ');', state);
   }
   return true;
 }

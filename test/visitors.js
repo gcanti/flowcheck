@@ -21,7 +21,7 @@ tape('options', function (tape) {
 
   tape.strictEqual(
     originalTransform('var x: number = 1;', {module: 'a/b'}),
-    'var _f = require("a/b");\n\nvar x: number = _f.check(1, _f.number);',
+    'var _f = require("a/b");var x: number = _f.check(1, _f.number);',
     'should handle module option'
   );
 

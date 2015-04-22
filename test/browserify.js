@@ -3,7 +3,7 @@
 var tape = require('tape');
 var browserify = require('browserify');
 var reactify = require('reactify');
-var to5ify = require('6to5ify');
+var babelify = require('babelify');
 var flowcheck = require('../index');
 
 function contains(tape, bundle, code) {
@@ -31,7 +31,7 @@ tape('browserify', function (tape) {
     tape.plan(2);
     browserify('./fixtures/main.js', {basedir: __dirname})
     .transform(flowcheck, {skipImport: true})
-    .transform(to5ify)
+    .transform(babelify)
     .bundle(function(err, result) {
       tape.ok(!err, 'should not fail');
       contains(tape, result, 'var x = _f.check(1, _f.string);');
