@@ -10,6 +10,11 @@
 
 **Note**: Gaps between patch versions are faulty/broken releases.
 
+## v0.2.6
+
+- **Bug Fix**
+  + empty shapes are interpreted as dicts #20
+
 ## v0.2.5
 
 - **Internal**

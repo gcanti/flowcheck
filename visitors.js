@@ -137,16 +137,16 @@ Context.prototype.getType = function(ann) {
         }.bind(this)).join(', ') + '])';
 
       case Syntax.ObjectTypeAnnotation :
-        if (ann.properties.length) {
-          // handle `{p1: T1; p2: T2; ... pn: Tn;}`
-          return this.getProperty('shape') + '({' + ann.properties.map(function (prop) {
-            return getObjectKey(prop.key) + ': ' + this.getType(prop.value);
-          }.bind(this)).join(', ') + '})';
+        if (ann.indexers && ann.indexers[0]) {
+          // handle `{[key: D]: C}`
+          var domain = this.getType(ann.indexers[0].key);
+          var codomain = this.getType(ann.indexers[0].value);
+          return this.getProperty('dict') + '(' + domain + ', ' + codomain + ')';
         }
-        // handle `{[key: D]: C}`
-        var domain = this.getType(ann.indexers[0].key);
-        var codomain = this.getType(ann.indexers[0].value);
-        return this.getProperty('dict') + '(' + domain + ', ' + codomain + ')';
+        // handle `{p1: T1; p2: T2; ... pn: Tn;}`
+        return this.getProperty('shape') + '({' + ann.properties.map(function (prop) {
+          return getObjectKey(prop.key) + ': ' + this.getType(prop.value);
+        }.bind(this)).join(', ') + '})';
 
       case Syntax.UnionTypeAnnotation :
         // handle `T1 | T2 | ... | Tn`

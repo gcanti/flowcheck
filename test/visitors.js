@@ -141,7 +141,13 @@ tape('dictionaries', function (tape) {
 });
 
 tape('shapes', function (tape) {
-  tape.plan(2);
+  tape.plan(3);
+
+  tape.strictEqual(
+    transform('var x: {} = {};'),
+    'var x: {} = _f.check({}, _f.shape({}));',
+    'should handle empty shapes'
+  );
 
   tape.strictEqual(
     transform('var x: {a: string; b: number;} = {};'),
