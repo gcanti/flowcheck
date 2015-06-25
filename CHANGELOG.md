@@ -10,6 +10,11 @@
 
 **Note**: Gaps between patch versions are faulty/broken releases.
 
+## v0.2.7
+
+- **Bug Fix**
+  + "type.is is not a function" when using constructor function with assert.union #21 (thanks @ivan)
+
 ## v0.2.6
 
 - **Bug Fix**

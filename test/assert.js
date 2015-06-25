@@ -89,7 +89,7 @@ tape('number', function (tape) {
 
 tape('list()', function (tape) {
 
-  tape.plan(5);
+  tape.plan(6);
 
   tape.strictEqual(
     f.list(f.number).name,
@@ -118,7 +118,13 @@ tape('list()', function (tape) {
   tape.strictEqual(
     f.list(f.number).validate([1, 2]),
     null,
-    'should succeed if x is a list of T'
+    'should succeed if x is a list of numbers'
+  );
+
+  tape.strictEqual(
+    f.list(Date).validate([new Date(), new Date()]),
+    null,
+    'should succeed if x is a list of dates'
   );
 
 });
@@ -143,7 +149,7 @@ tape('optional()', function (tape) {
 
 tape('maybe()', function (tape) {
 
-  tape.plan(6);
+  tape.plan(7);
 
   tape.strictEqual(
     f.maybe(f.number).name,
@@ -178,7 +184,13 @@ tape('maybe()', function (tape) {
   tape.strictEqual(
     f.maybe(f.number).validate(1),
     null,
-    'should succeed if x is an instance of T'
+    'should succeed if x is an instance of number'
+  );
+
+  tape.strictEqual(
+    f.maybe(Date).validate(new Date()),
+    null,
+    'should succeed if x is an instance of Date'
   );
 
 });
@@ -319,7 +331,7 @@ tape('shape()', function (tape) {
 
 tape('union()', function (tape) {
 
-  tape.plan(4);
+  tape.plan(5);
 
   tape.strictEqual(
     f.union([f.string, f.number]).name,
@@ -342,7 +354,13 @@ tape('union()', function (tape) {
   tape.strictEqual(
     f.union([f.string, f.number]).validate(1),
     null,
-    'should succeed if x is an instance of T'
+    'should succeed if x is an instance of string or number'
+  );
+
+  tape.strictEqual(
+    f.union([f.string, Date]).validate(new Date()),
+    null,
+    'should succeed if x is an instance of string or date'
   );
 
 });

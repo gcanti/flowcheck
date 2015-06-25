@@ -1,4 +1,4 @@
-//     flowcheck 0.2.5
+//     flowcheck 0.2.7
 //     https://github.com/gcanti/flowcheck
 //     (c) 2015 Giulio Canti <giulio.canti@gmail.com>
 //     flowcheck may be freely distributed under the MIT license.
@@ -221,13 +221,13 @@ function shape(props, name) {
 function union(types, name) {
   name = name || types.map(getName).join(' | ');
   var type = new Type(name, function (x, ctx) {
+    ctx = (ctx || []).concat(name);
     if (types.some(function (type) {
-      return type.is(x);
+      return validate(x, type, ctx, true) === null;
     })) {
       return null;
     }
-    ctx = ctx || [];
-    return [new Failure(x, type, ctx.concat(name))];
+    return [new Failure(x, type, ctx)];
   });
   return type;
 }

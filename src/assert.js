@@ -209,9 +209,9 @@ function shape(props: {[key: string]: Type;}, name?: string): Type {
 function union(types: Array<Type>, name?: string): Type {
   name = name || types.map(getName).join(' | ');
   var type: Type = new Type(name, (x, ctx) => {
-    if (types.some((type) => type.is(x))) { return null; }
-    ctx = ctx || [];
-    return [new Failure(x, type, ctx.concat(name))];
+    ctx = (ctx || []).concat(name);
+    if (types.some((type) => validate(x, type, ctx, true) === null)) { return null; }
+    return [new Failure(x, type, ctx)];
   });
   return type;
 }
