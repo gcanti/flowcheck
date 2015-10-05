@@ -1,3 +1,5 @@
+**Note**. If you are using babel you may want to take a look at [babel-plugin-tcomb](https://github.com/gcanti/babel-plugin-tcomb).
+
 # Why?
 
 Use types annotations today, even if you don't actually use Flow (or TypeScript). Then strip the assertions in production.
