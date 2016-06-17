@@ -1,3 +1,5 @@
+# This repo is deprecated, please migrate to [babel-plugin-tcomb](https://github.com/gcanti/babel-plugin-tcomb) which is now Flow compatible
+
 **Note**. If you are using babel you may want to take a look at [babel-plugin-tcomb](https://github.com/gcanti/babel-plugin-tcomb).
 
 # Why?
